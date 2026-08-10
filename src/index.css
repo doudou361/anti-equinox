@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-dark: #050507;
+  --bg-main: #000000;
+  --bg-card: #0a0a0c;
+  --text-main: #F4F4F5;
+  --text-muted: #A1A1AA;
+  
+  --gold-primary: #C5A059;
+  --gold-light: #FFDF73;
+  --gold-dark: #A67C00;
+  --pink-accent: #FFB6C1;
+  
+  --gold-gradient: linear-gradient(135deg, #E6C875 0%, #C5A059 50%, #9B7629 100%);
+  
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gold-primary);
+  border-radius: 4px;
+}
+
+/* Utilities */
+.text-gold {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-gold {
+  background: var(--gold-gradient);
+}
+
+.btn-primary {
+  background: var(--gold-gradient);
+  color: #000;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-glow {
+  background: var(--gold-primary);
+  color: #000;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(197, 160, 89, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.btn-glow:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px rgba(197, 160, 89, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.btn-glow-pink {
+  background: var(--pink-accent);
+  color: #000;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 182, 193, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.btn-glow-pink:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px rgba(255, 182, 193, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(17, 17, 21, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+/* Clean up App default styles */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
+
+.mobile-only-group {
+  display: none;
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .desktop-menu {
+    display: none !important;
+  }
+  .mobile-only-group {
+    display: flex !important;
+  }
+  
+  .btn-primary {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+  }
+  
+  section {
+    padding: 3.5rem 1rem !important;
+  }
+}
