@@ -34,7 +34,7 @@ export const pricingCategories = [
   },
   {
     id: 'pack_vip',
-    name: 'Pack VIP',
+    name: 'Pack VIP 👑',
     description: "L'expérience premium absolue de l'Equinox Sports Club.",
     plans: [
       { 
@@ -42,18 +42,11 @@ export const pricingCategories = [
         frequency: 'Mensuel', 
         sessions: 'Accès illimité toute la journée et le mois', 
         price: '10000 DA / Mois', 
-        benefits: ["Bouteille d'eau", "Serviette", "Accès prioritaire"] 
+        benefits: ["Bouteille d'eau gratuite", "Serviette", "Accès prioritaire"] 
       }
     ]
   },
-  {
-    id: 'student',
-    name: 'Offre Étudiant',
-    description: 'Tarif préférentiel sur présentation de la carte étudiante.',
-    plans: [
-      { id: 'student_placeholder', frequency: 'Mensuel', sessions: 'Accès étudiant', price: 'Tarif Spécial (À venir)' }
-    ]
-  },
+
   {
     id: 'seance_libre',
     name: 'Séance Libre',

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 
-const Navbar = ({ onBookClick, onContactClick }) => {
+const Navbar = ({ onBookClick, onContactClick, onNutritionClick, onHomeClick }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { lang, toggleLanguage, t } = useLanguage();
@@ -37,79 +37,107 @@ const Navbar = ({ onBookClick, onContactClick }) => {
           alignItems: 'center'
         }}
       >
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <a href="#" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img 
-              src="/logo.png" 
-              alt="Equinox Sports Club" 
-              style={{ 
-                height: '95px', 
-                objectFit: 'contain',
-                transform: 'scale(1.3)',
-                transformOrigin: 'left center'
-              }} 
-            />
-          </a>
-        </div>
+        {/* ── 3-column desktop layout: logo | links (center) | actions ── */}
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '1rem' }}>
 
-        {/* Desktop Menu */}
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }} className="desktop-menu">
-          <a href="#schedule" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, transition: 'color 0.3s' }}>
-            {t('nav.schedule')}
-          </a>
-          <a href="#pricing" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, transition: 'color 0.3s' }}>
-            {t('nav.pricing')}
-          </a>
-          <a href="#products" style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, transition: 'color 0.3s' }}>
-            {t('nav.products')}
-          </a>
-          <button 
-            onClick={onContactClick} 
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'var(--text-main)', 
-              fontWeight: 500, 
-              cursor: 'pointer', 
-              fontSize: '1rem',
-              transition: 'color 0.3s' 
-            }}
-            onMouseEnter={(e) => e.target.style.color = 'var(--gold-primary)'}
-            onMouseLeave={(e) => e.target.style.color = 'var(--text-main)'}
-          >
-            {t('nav.contact')}
-          </button>
+          {/* Logo — left */}
+          <div style={{ flexShrink: 0 }}>
+            <a
+              href="#"
+              onClick={(e) => { e.preventDefault(); onHomeClick?.(); }}
+              style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+            >
+              <img
+                src="/logo.png"
+                alt="Equinox Sports Club"
+                style={{
+                  height: '95px',
+                  objectFit: 'contain',
+                  transform: 'scale(1.3)',
+                  transformOrigin: 'left center'
+                }}
+              />
+            </a>
+          </div>
 
-          {/* Language Switcher Pill */}
-          <button 
-            onClick={toggleLanguage}
+          {/* Nav links — true center */}
+          <div
+            className="desktop-menu"
             style={{
-              background: 'rgba(197, 160, 89, 0.1)',
-              border: '1px solid var(--gold-primary)',
-              color: 'var(--gold-primary)',
-              borderRadius: '20px',
-              padding: '0.35rem 0.85rem',
-              fontSize: '0.85rem',
-              fontWeight: 'bold',
-              cursor: 'pointer',
+              flex: 1,
               display: 'flex',
+              justifyContent: 'center',
               alignItems: 'center',
-              gap: '0.35rem',
-              transition: 'all 0.3s'
+              gap: '2rem'
             }}
           >
-            <span>🌐</span>
-            <span>{lang === 'fr' ? 'FR | EN' : 'EN | FR'}</span>
-          </button>
+            <a href="#schedule"
+              style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, fontSize: '0.95rem', transition: 'color 0.3s', whiteSpace: 'nowrap' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            >
+              {t('nav.schedule')}
+            </a>
+            <a href="#pricing"
+              style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, fontSize: '0.95rem', transition: 'color 0.3s', whiteSpace: 'nowrap' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            >
+              {t('nav.pricing')}
+            </a>
+            <button
+              onClick={onNutritionClick}
+              style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer', transition: 'color 0.3s', whiteSpace: 'nowrap', padding: 0 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            >
+              Nutrition
+            </button>
+            <button
+              onClick={onContactClick}
+              style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer', transition: 'color 0.3s', whiteSpace: 'nowrap', padding: 0 }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            >
+              {t('nav.contact')}
+            </button>
+          </div>
 
-          <button className="btn-primary" onClick={onBookClick} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}>
-            {t('nav.bookNow')}
-          </button>
+          {/* Actions — right */}
+          <div
+            className="desktop-menu"
+            style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}
+          >
+            {/* Language Switcher Pill */}
+            <button
+              onClick={toggleLanguage}
+              style={{
+                background: 'rgba(197, 160, 89, 0.1)',
+                border: '1px solid var(--gold-primary)',
+                color: 'var(--gold-primary)',
+                borderRadius: '20px',
+                padding: '0.35rem 0.85rem',
+                fontSize: '0.85rem',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                transition: 'all 0.3s'
+              }}
+            >
+              <span>🌐</span>
+              <span>{lang === 'fr' ? 'FR | EN' : 'EN | FR'}</span>
+            </button>
+
+            <button className="btn-primary" onClick={onBookClick} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}>
+              {t('nav.bookNow')}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Right Group */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="mobile-only-group">
+        <div style={{ alignItems: 'center', gap: '1rem' }} className="mobile-only-group">
           {/* Mobile Language Switcher */}
           <button 
             onClick={toggleLanguage}
@@ -168,6 +196,12 @@ const Navbar = ({ onBookClick, onContactClick }) => {
           <a href="#products" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '1.25rem', fontWeight: 500 }}>
             {t('nav.products')}
           </a>
+          <button
+            onClick={() => { setIsMobileMenuOpen(false); onNutritionClick?.(); }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.25rem', fontWeight: 500, cursor: 'pointer' }}
+          >
+            Nutrition
+          </button>
           <button 
             onClick={() => { setIsMobileMenuOpen(false); onContactClick(); }} 
             style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.25rem', fontWeight: 500, cursor: 'pointer' }}

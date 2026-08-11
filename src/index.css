@@ -143,6 +143,28 @@ h1, h2, h3, h4, h5, h6 {
   flex: 1;
 }
 
+.booking-modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.booking-modal-container {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  border-radius: 24px;
+}
+
 .mobile-only-group {
   display: none;
 }
@@ -167,8 +189,131 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.875rem 2rem;
     font-size: 1rem;
   }
-  
+
+  /* --- Standard plan rows (price + label side by side) --- */
+  .plan-row {
+    gap: 14px !important;
+  }
+  .plan-row .plan-label {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .plan-row .plan-label span:first-child {
+    font-size: 1.05rem !important;
+  }
+  .plan-row .plan-price {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 1.15rem !important;
+  }
+
+  /* --- Promo plan rows: stack vertically --- */
+  .plan-row-promo {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1.25rem !important;
+  }
+  .plan-row-promo .plan-label {
+    width: 100%;
+  }
+  .plan-row-promo .plan-price-promo {
+    width: 100%;
+    align-items: flex-start !important;
+    border-top: 1px solid rgba(0,0,0,0.15);
+    padding-top: 0.6rem;
+  }
+  .plan-row-promo .plan-price-promo span:first-child {
+    font-size: 1.15rem !important;
+  }
+  .plan-row-promo .plan-price-promo span:last-child {
+    font-size: 0.8rem !important;
+    opacity: 0.7;
+  }
+
   section {
     padding: 3.5rem 1rem !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   NUTRITION PAGE
+   ════════════════════════════════════════════════════════════════ */
+
+/* Filter pill bar — horizontal scroll, no visible scrollbar */
+.nutrition-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 0.5rem;
+}
+.nutrition-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Product grid — 2 cols mobile, 3 tablet, 4 desktop */
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+@media (min-width: 768px) {
+  .nutrition-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+@media (min-width: 1280px) {
+  .nutrition-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Product card image area — 140px mobile, 180px desktop */
+.product-card-img {
+  height: 140px;
+}
+@media (min-width: 768px) {
+  .product-card-img {
+    height: 180px;
+  }
+}
+
+/* Product modal — two columns desktop, stacked mobile */
+.product-modal-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.product-modal-left {
+  padding: 2rem 2rem 1rem;
+}
+.product-modal-right {
+  padding: 1rem 2rem 2rem;
+  border-top: 1px solid rgba(199,154,97,0.12);
+}
+
+@media (min-width: 640px) {
+  .product-modal-layout {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .product-modal-left {
+    flex: 1;
+    padding: 2.5rem;
+    border-right: 1px solid rgba(199,154,97,0.12);
+  }
+  .product-modal-right {
+    width: 300px;
+    flex-shrink: 0;
+    padding: 2.5rem 2rem;
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 }

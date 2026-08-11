@@ -7,58 +7,82 @@ import Hero from './components/Hero'
 import Schedule from './components/Schedule'
 import Pricing from './components/Pricing'
 import Products from './components/Products'
-import BookingModal from './components/BookingModal'
+import BookingPage from './components/BookingPage'
 import ContactModal from './components/ContactModal'
+import NutritionPage from './pages/Nutrition'
 import './App.css'
 
 function AppContent() {
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'booking' | 'nutrition'
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [preselectedCategory, setPreselectedCategory] = useState(null);
 
-  const openBookingModal = (category = null) => {
+  const openBookingPage = (category = null) => {
     const validCategory = (category && !category.nativeEvent) ? category : null;
     setPreselectedCategory(validCategory);
-    setIsBookingModalOpen(true);
+    setCurrentView('booking');
+    window.scrollTo(0, 0);
   };
-  
-  const closeBookingModal = () => {
-    setIsBookingModalOpen(false);
+
+  const closeBookingPage = () => {
+    setCurrentView('home');
     setTimeout(() => setPreselectedCategory(null), 300);
   };
 
-  const openContactModal = () => {
-    setIsContactModalOpen(true);
+  const openNutritionPage = () => {
+    setCurrentView('nutrition');
+    window.scrollTo(0, 0);
   };
 
-  const closeContactModal = () => {
-    setIsContactModalOpen(false);
+  const goHome = () => {
+    setCurrentView('home');
+    window.scrollTo(0, 0);
   };
+
+  const openContactModal = () => setIsContactModalOpen(true);
+  const closeContactModal = () => setIsContactModalOpen(false);
 
   return (
     <>
-      <Navbar onBookClick={openBookingModal} onContactClick={openContactModal} />
-      <main className="main-content">
-        <Hero onBookClick={openBookingModal} />
-        <Schedule />
-        <Pricing onBookClick={openBookingModal} />
-        <Products onContactClick={openContactModal} />
-      </main>
-      <Footer onContactClick={openContactModal} />
-      
-      <AnimatePresence>
-        {isBookingModalOpen && (
-          <BookingModal 
-            isOpen={isBookingModalOpen} 
-            onClose={closeBookingModal} 
-            preselectedCategory={preselectedCategory} 
+      {currentView === 'home' ? (
+        <>
+          <Navbar
+            onBookClick={openBookingPage}
+            onContactClick={openContactModal}
+            onNutritionClick={openNutritionPage}
+            onHomeClick={goHome}
           />
-        )}
+          <main className="main-content">
+            <Hero onBookClick={openBookingPage} />
+            <Schedule />
+            <Pricing onBookClick={openBookingPage} />
+            {/* <Products onContactClick={openContactModal} /> */}
+          </main>
+          <Footer onContactClick={openContactModal} />
+        </>
+      ) : currentView === 'nutrition' ? (
+        <>
+          <Navbar
+            onBookClick={openBookingPage}
+            onContactClick={openContactModal}
+            onNutritionClick={openNutritionPage}
+            onHomeClick={goHome}
+          />
+          <NutritionPage onHomeClick={goHome} />
+          <Footer onContactClick={openContactModal} />
+        </>
+      ) : (
+        <BookingPage
+          onClose={closeBookingPage}
+          preselectedCategory={preselectedCategory}
+        />
+      )}
 
+      <AnimatePresence>
         {isContactModalOpen && (
-          <ContactModal 
-            isOpen={isContactModalOpen} 
-            onClose={closeContactModal} 
+          <ContactModal
+            isOpen={isContactModalOpen}
+            onClose={closeContactModal}
           />
         )}
       </AnimatePresence>
