@@ -130,14 +130,12 @@ const Hero = () => {
       }} />
 
       {/* Content */}
-      <div style={{
-        position: 'relative',
-        zIndex: 3,
-        textAlign: 'center',
-        padding: '0 2rem',
-        maxWidth: '800px'
-      }}>
-        <motion.p 
+      <div className="container" style={{ position: 'relative', zIndex: 3, display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '800px'
+        }}>
+          <motion.p 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
@@ -171,6 +169,7 @@ const Hero = () => {
         >
           {t('hero.title1')} <span className="text-gold">{t('hero.title2')}</span>
         </motion.h1>
+        </div>
       </div>
     </section>
   );

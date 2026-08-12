@@ -133,8 +133,8 @@ const Pricing = ({ onPlanBook }) => {
 
   return (
     <>
-      <section id="pricing" style={{ padding: '6rem 2rem', backgroundColor: 'var(--bg-card)' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <section id="pricing" style={{ padding: '6rem 0', backgroundColor: 'var(--bg-card)' }}>
+        <div className="container">
 
           <SectionHeader title={t('pricing.title')} subtitle={t('pricing.subtitle')} />
 

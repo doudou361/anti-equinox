@@ -40,14 +40,16 @@ const CrossfitScheduleModal = ({ onClose }) => {
                   }} />
                   {translatedDay}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.4rem', paddingLeft: '0.5rem' }}>
                   {item.times.map((time, tIdx) => (
                     <div key={tIdx} style={{
-                      color: 'var(--text-main)', fontSize: '0.9rem',
-                      background: 'rgba(197,160,89, 0.08)', border: '1px solid rgba(197,160,89, 0.2)',
-                      padding: '0.4rem', borderRadius: '6px', textAlign: 'center', fontWeight: 600
+                      display: 'flex', justifyContent: 'space-between',
+                      color: 'var(--text-main)', fontSize: '0.95rem',
+                      padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 500,
+                      background: 'rgba(255,255,255,0.02)'
                     }}>
-                      {time}
+                      <span style={{ color: '#9A948A' }}>Groupe {tIdx + 1}</span>
+                      <span style={{ color: 'var(--gold-primary)', fontWeight: 700 }}>{time}</span>
                     </div>
                   ))}
                 </div>

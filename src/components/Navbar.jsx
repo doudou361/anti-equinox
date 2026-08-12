@@ -83,18 +83,17 @@ const Navbar = ({ onBookClick, onContactClick, onCrossfitClick, onNutritionClick
           left: 0,
           right: 0,
           zIndex: 1000,
-          padding: '1rem 2rem',
+          zIndex: 1000,
+          padding: '1rem 0',
           transition: 'all 0.3s ease',
           backgroundColor: isScrolled ? 'rgba(7, 7, 9, 0.95)' : 'transparent',
           backdropFilter: isScrolled ? 'blur(10px)' : 'none',
           borderBottom: isScrolled ? '1px solid rgba(212, 175, 55, 0.1)' : 'none',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
         }}
       >
         {/* ── 3-column desktop layout: logo | links (center) | actions ── */}
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '1rem' }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '1rem' }}>
 
           {/* Logo — left */}
           <div style={{ flexShrink: 0 }}>
@@ -189,6 +188,7 @@ const Navbar = ({ onBookClick, onContactClick, onCrossfitClick, onNutritionClick
           >
             {isMobileMenuOpen ? <CloseIcon size={28} /> : <MenuIcon size={28} />}
           </button>
+        </div>
         </div>
       </motion.nav>
 
