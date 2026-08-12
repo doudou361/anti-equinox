@@ -5,9 +5,26 @@
  * every displayed price updates automatically.
  */
 
+import { pricingCategories } from '../data/pricing';
+
 /** Format a numeric DA amount in French locale (e.g. 25000 → "25 000 DA") */
 export const formatDA = (n) =>
   new Intl.NumberFormat('fr-FR').format(n) + ' DA';
+
+/** Nutrition products have optional prices — 0 means "ask us". */
+export const formatProductPrice = (price) =>
+  price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DA' : 'Prix sur demande';
+
+/** Translation key suffix used for each pricing category id. */
+export const CATEGORY_KEY_BY_ID = {
+  musculation_cross_training: 'muscCT',
+  musculation_avec_crossfit: 'muscCF',
+  pack_vip: 'vip',
+  seance_libre: 'libre',
+};
+
+/** Look up a pricing category by its id. */
+export const getCategory = (id) => pricingCategories.find((c) => c.id === id);
 
 /**
  * Calculate total price for a given monthly rate and subscription duration.
