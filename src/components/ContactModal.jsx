@@ -109,7 +109,7 @@ const ContactModal = ({ isOpen, onClose }) => {
               <a 
                 href="https://maps.google.com/?q=P982+X7C+EQUINOX+sport+club,+Ouled+Hedadj" 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -271,7 +271,7 @@ const ContactModal = ({ isOpen, onClose }) => {
             <a 
               href="https://www.instagram.com/equinoxsports_club/" 
               target="_blank" 
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -296,7 +296,7 @@ const ContactModal = ({ isOpen, onClose }) => {
             <a 
               href="https://www.instagram.com/equinoxsports__club/?hl=en" 
               target="_blank" 
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -321,7 +321,7 @@ const ContactModal = ({ isOpen, onClose }) => {
             <a 
               href="https://www.instagram.com/equinox.nutrition_/" 
               target="_blank" 
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -346,7 +346,7 @@ const ContactModal = ({ isOpen, onClose }) => {
             <a 
               href="https://www.facebook.com/profile.php?id=61554660353364" 
               target="_blank" 
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{
                 display: 'flex',
                 alignItems: 'center',

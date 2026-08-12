@@ -1,14 +1,19 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import Stripe from 'stripe';
+import { parseBooking, sheetSafe } from './_shared.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const { formData, planData, selectedDate, selectedTime } = req.body;
+  const parsed = parseBooking(req.body);
+  if (parsed.error) {
+    return res.status(400).json({ error: parsed.error });
+  }
+  const booking = parsed.booking;
 
+  try {
     // Ensure we have Google credentials configured
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
       console.warn("Missing Google Sheets credentials in environment variables. Simulating success for UI testing.");
@@ -25,7 +30,9 @@ export default async function handler(req, res) {
     if (stripeKey) {
       // ── STRIPE PIPELINE ──
       const stripe = new Stripe(stripeKey);
-      
+
+      const origin = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -33,27 +40,28 @@ export default async function handler(req, res) {
             price_data: {
               currency: 'dzd',
               product_data: {
-                name: `Abonnement Équinox: ${planData.name}`,
-                description: `${planData.frequency} - ${planData.sessions}`,
+                name: `Abonnement Équinox: ${booking.planName}`,
+                description: `${booking.planFrequency} - ${booking.planSessions} - ${booking.months} mois`,
               },
-              unit_amount: planData.monthlyRate * 100, // Stripe expects amounts in the smallest currency unit
+              unit_amount: booking.total * 100, // Stripe expects amounts in the smallest currency unit
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        success_url: `${req.headers.origin}/success`,
-        cancel_url: `${req.headers.origin}/cancel`,
+        success_url: `${origin}/success`,
+        cancel_url: `${origin}/cancel`,
         metadata: {
-          customerName: formData.fullName,
-          customerPhone: formData.phone,
-          customerGender: formData.gender,
-          planName: planData.name,
-          planFrequency: planData.frequency,
-          planSessions: planData.sessions,
-          amountPaid: planData.monthlyRate.toString(),
-          date: selectedDate || '',
-          time: selectedTime || '',
+          customerName: booking.fullName,
+          customerPhone: booking.phone,
+          customerGender: booking.gender,
+          planName: booking.planName,
+          planFrequency: booking.planFrequency,
+          planSessions: booking.planSessions,
+          months: String(booking.months),
+          amountPaid: String(booking.total),
+          date: booking.selectedDate,
+          time: booking.selectedTime,
         }
       });
 
@@ -76,13 +84,13 @@ export default async function handler(req, res) {
       // Append row
       await sheet.addRow({
         Date: new Date().toLocaleDateString('fr-FR'),
-        Nom: formData.fullName,
-        Téléphone: formData.phone,
-        Sexe: formData.gender,
-        Abonnement: planData.name,
-        Durée: planData.frequency,
-        Séances: planData.sessions,
-        Tarif: `${planData.monthlyRate} DA`,
+        Nom: sheetSafe(booking.fullName),
+        Téléphone: sheetSafe(booking.phone),
+        Sexe: sheetSafe(booking.gender),
+        Abonnement: sheetSafe(booking.planName),
+        Durée: sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
+        Séances: sheetSafe(booking.planSessions),
+        Tarif: `${booking.total} DA`,
         Statut: 'Réservé (Non Payé)'
       });
 
@@ -92,6 +100,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Booking Error:', error);
-    return res.status(500).json({ error: error.message || 'An error occurred while processing the booking.' });
+    return res.status(500).json({ error: 'An error occurred while processing the booking.' });
   }
 }

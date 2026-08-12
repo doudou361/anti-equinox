@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { sheetSafe } from './_shared.js';
 
 // Stripe requires the raw body to construct the event, so we disable body parsing
 export const config = {
@@ -54,6 +55,11 @@ export default async function handler(req, res) {
       date, time
     } = session.metadata || {};
 
+    if (!process.env.GOOGLE_SHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+      console.error('Missing Google Sheets credentials; cannot record paid booking.');
+      return res.status(500).send('Sheets configuration error');
+    }
+
     try {
       const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
       
@@ -67,12 +73,12 @@ export default async function handler(req, res) {
 
       await sheet.addRow({
         Date: new Date().toLocaleDateString('fr-FR'),
-        Nom: customerName || 'Inconnu',
-        Téléphone: customerPhone || 'Inconnu',
-        Sexe: customerGender || 'Inconnu',
-        Abonnement: planName || 'Inconnu',
-        Durée: planFrequency || '-',
-        Séances: planSessions || '-',
+        Nom: sheetSafe(customerName || 'Inconnu'),
+        Téléphone: sheetSafe(customerPhone || 'Inconnu'),
+        Sexe: sheetSafe(customerGender || 'Inconnu'),
+        Abonnement: sheetSafe(planName || 'Inconnu'),
+        Durée: sheetSafe(planFrequency || '-'),
+        Séances: sheetSafe(planSessions || '-'),
         Tarif: `${amountPaid || 0} DA`,
         Statut: 'Payé (Stripe)',
         StripeID: session.id

@@ -10,6 +10,8 @@ import { useLanguage } from '../context/LanguageContext';
 const BLOOD_GROUPS = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 const DURATIONS    = [1, 3, 6, 12];
 const WA_NUMBER    = '213562838455';
+const NAME_MAX     = 60;
+const PHONE_MAX    = 20;
 
 const SL_WA_URL =
   'https://wa.me/' + WA_NUMBER + '?text=' +
@@ -162,7 +164,7 @@ const PlanPickerRow = ({ catKey, plan, special, onSelect, t }) => (
     <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--theme-primary)', whiteSpace: 'nowrap' }}>
       {formatDA(plan.monthlyRate)}
     </span>
-    <ChooseBtn onClick={() => onSelect({ catKey, frequency: plan.frequency, monthlyRate: plan.monthlyRate, name: plan.name })} label={t('bookingModal.chooseBtn')} />
+    <ChooseBtn onClick={() => onSelect({ id: plan.id, catKey, frequency: plan.frequency, monthlyRate: plan.monthlyRate, name: plan.name })} label={t('bookingModal.chooseBtn')} />
   </div>
 );
 
@@ -201,7 +203,7 @@ const PlanPicker = ({ onSelect }) => {
           <span style={{ fontSize: '11px', color: '#9A948A' }}>{t('pricing.sessions.Accès unitaire — sans engagement')}</span>
         </div>
         <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--theme-primary)', whiteSpace: 'nowrap' }}>500 DA</span>
-        <ChooseBtn onClick={() => window.open(SL_WA_URL, '_blank')} label={t('bookingModal.waBtn')} isWA />
+        <ChooseBtn onClick={() => window.open(SL_WA_URL, '_blank', 'noopener,noreferrer')} label={t('bookingModal.waBtn')} isWA />
       </div>
     </div>
   );
@@ -209,7 +211,7 @@ const PlanPicker = ({ onSelect }) => {
 
 // ── Reusable text field ───────────────────────────────────────────────────────
 
-const Field = ({ label, type = 'text', placeholder, value, onChange, error }) => {
+const Field = ({ label, type = 'text', placeholder, value, onChange, error, maxLength }) => {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -224,6 +226,7 @@ const Field = ({ label, type = 'text', placeholder, value, onChange, error }) =>
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        maxLength={maxLength}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         style={{
@@ -263,10 +266,10 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
-    if (!name.trim()) errs.name = t('bookingModal.errors.name');
+    if (!name.trim() || name.trim().length > NAME_MAX) errs.name = t('bookingModal.errors.name');
     const digits = phone.replace(/\D/g, '');
     if (!phone.trim())          errs.phone = t('bookingModal.errors.phoneReq');
-    else if (digits.length < 9) errs.phone = t('bookingModal.errors.phoneInv');
+    else if (digits.length < 9 || digits.length > 15) errs.phone = t('bookingModal.errors.phoneInv');
     if (!bloodGroup) errs.bloodGroup = t('bookingModal.errors.bloodGroup');
     if (!birthdate)  errs.birthdate  = t('bookingModal.errors.birthdate');
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
@@ -283,12 +286,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
             phone: phone,
             gender: gender,
           },
-          planData: {
-            name: plan.name || plan.catKey,
-            frequency: plan.frequency,
-            sessions: plan.sessions || '-',
-            monthlyRate: total
-          }
+          planId: plan.id,
+          months,
         })
       });
 
@@ -373,9 +372,9 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
       </motion.div>
 
       {/* Name + Phone */}
-      <Field label={t('bookingModal.fullNameLabel')} placeholder="" value={name}
+      <Field label={t('bookingModal.fullNameLabel')} placeholder="" value={name} maxLength={NAME_MAX}
         onChange={(e) => { setName(e.target.value); clear('name'); }} error={errors.name} />
-      <Field label={t('bookingModal.phoneLabel')} type="tel" placeholder="" value={phone}
+      <Field label={t('bookingModal.phoneLabel')} type="tel" placeholder="" value={phone} maxLength={PHONE_MAX}
         onChange={(e) => { setPhone(e.target.value); clear('phone'); }} error={errors.phone} />
 
       {/* Blood group */}
