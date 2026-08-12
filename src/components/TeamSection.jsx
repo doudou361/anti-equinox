@@ -121,7 +121,7 @@ const TeamSection = () => {
           <CoachCard 
             name="Kamel Ailane" 
             role="Head Coach" 
-            image="/coaches/kamel-ailane-1.jpg.jpeg"
+            image="/coaches/kamel-ailane-2.jpg.jpg"
             icon={Medal}
             iconColor="#C5A059"
           />
