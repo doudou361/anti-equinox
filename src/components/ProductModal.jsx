@@ -8,14 +8,18 @@ const formatPrice = (price) =>
     ? new Intl.NumberFormat('fr-DZ').format(price) + ' DA'
     : 'Prix sur demande';
 
+const NAME_MAX = 60;
+const PHONE_MAX = 20;
+
 const validate = (name, phone) => {
   const errors = {};
   if (!name.trim()) errors.name = 'Le nom complet est requis.';
+  else if (name.trim().length > NAME_MAX) errors.name = `Le nom ne doit pas dépasser ${NAME_MAX} caractères.`;
   const digits = phone.replace(/\D/g, '');
   if (!phone.trim()) {
     errors.phone = 'Le numéro de téléphone est requis.';
-  } else if (digits.length < 9) {
-    errors.phone = 'Numéro invalide (9 chiffres minimum).';
+  } else if (digits.length < 9 || digits.length > 15) {
+    errors.phone = 'Numéro invalide (9 à 15 chiffres).';
   }
   return errors;
 };
@@ -55,7 +59,7 @@ const WhatsAppIcon = () => (
 
 // ── Input field ───────────────────────────────────────────────────────────────
 
-const Field = ({ label, type = 'text', placeholder, value, onChange, error }) => {
+const Field = ({ label, type = 'text', placeholder, value, onChange, error, maxLength }) => {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -75,6 +79,7 @@ const Field = ({ label, type = 'text', placeholder, value, onChange, error }) =>
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        maxLength={maxLength}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         style={{
@@ -131,7 +136,7 @@ const ProductModal = ({ product, onClose }) => {
       : `Bonjour 👋, je m'appelle ${name} et je suis intéressé(e) par ${product.name}. Mon numéro: ${phone}`;
 
     const url = `https://wa.me/213562838455?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
     setSent(true);
   };
 
@@ -355,11 +360,13 @@ const ProductModal = ({ product, onClose }) => {
                         setErrors((prev) => ({ ...prev, name: undefined }));
                     }}
                     error={errors.name}
+                    maxLength={NAME_MAX}
                   />
                   <Field
                     label="Numéro de téléphone"
                     type="tel"
                     placeholder="05XX XX XX XX"
+                    maxLength={PHONE_MAX}
                     value={phone}
                     onChange={(e) => {
                       setPhone(e.target.value);

@@ -288,7 +288,7 @@ const Pricing = ({ onPlanBook }) => {
 
               <button
                 className="btn-glow"
-                onClick={() => window.open(SL_WA_URL, '_blank')}
+                onClick={() => window.open(SL_WA_URL, '_blank', 'noopener,noreferrer')}
                 style={{
                   width: '100%', padding: '0.9rem', fontSize: '1rem', borderRadius: '8px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
