@@ -116,7 +116,8 @@ function AppContent() {
           <main className="main-content">
             <Hero onBookClick={openBookingModal} />
             <Schedule />
-            <Pricing onPlanBook={openBookingModal} />
+            {/* Pricing passes specific plan → modal skips picker, goes straight to form */}
+            <Pricing onPlanBook={openBookingModal} onCrossfitClick={openCrossfitModal} />
             <TeamSection />
             <Gallery />
           </main>

@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 
 const Products = ({ onContactClick }) => {
-  const { t } = useLanguage();
-  const items = t('products.items');
+  const { t, tList } = useLanguage();
+  const items = tList('products.items');
 
   return (
     <section id="products" style={{ padding: '6rem 2rem', position: 'relative' }}>
@@ -42,7 +42,7 @@ const Products = ({ onContactClick }) => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
           gap: '2rem'
         }}>
-          {Array.isArray(items) && items.map((product, idx) => (
+          {items.map((product, idx) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 30 }}
