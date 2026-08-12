@@ -4,9 +4,11 @@ export const translations = {
     nav: {
       schedule: "Horaires",
       pricing: "Tarifs",
+      team: "Nos Coachs",
+      crossfitSchedule: "Horaires CrossFit",
       products: "Produits",
       contact: "Contact",
-      bookNow: "Réserver",
+      bookNow: "Réservez votre séance",
     },
     // Hero
     hero: {
@@ -40,6 +42,51 @@ export const translations = {
       perMonth: "/ Mois",
       selectPlan: "Sélectionner",
       popular: "POPULAIRE",
+      planNames: {
+        muscCT: "Musculation / Cross Training",
+        muscCF: "Musculation avec CrossFit",
+        vip: "Pack VIP",
+        libre: "Séance Libre"
+      },
+      desc: {
+        muscCT: "Accès à la salle avec machines et zones de musculation/cross training.",
+        muscCF: "Le pack complet incluant la musculation classique et les séances encadrées de CrossFit.",
+        vip: "L'expérience premium absolue de l'Équinox Sports Club.",
+        libre: "Venez vous entraîner pour une seule séance, sans engagement."
+      },
+      freq: {
+        "1x Semaine": "1x Semaine",
+        "2x Semaine": "2x Semaine",
+        "3x Semaine": "3x Semaine",
+        "4x Semaine": "4x Semaine",
+        "Illimité": "Illimité",
+        "Mois Libre": "Mois Libre",
+        "Mensuel": "Mensuel",
+        "1 Séance": "1 Séance"
+      },
+      sessions: {
+        "4 séances / mois": "4 séances / mois",
+        "8 séances / mois": "8 séances / mois",
+        "12 séances / mois": "12 séances / mois",
+        "16 séances / mois": "16 séances / mois",
+        "Accès total": "Accès total",
+        "Accès flexible": "Accès flexible",
+        "Accès illimité toute la journée": "Accès illimité toute la journée",
+        "Accès unitaire": "Accès unitaire",
+        "Accès unitaire — sans engagement": "Accès unitaire — sans engagement"
+      },
+      benefits: {
+        water: "Bouteille d'eau gratuite",
+        towel: "Serviette offerte",
+        priority: "Accès prioritaire",
+        coaching: "Coaching personnalisé"
+      },
+      bookBtn: "Réserver",
+      bookVip: "Réserver VIP",
+      bookSession: "Réserver une séance",
+      seeSchedule: "Voir Horaires",
+      pricePerMonth: " / mois",
+      pricePerSession: " / séance",
     },
     // Products
     products: {
@@ -104,18 +151,27 @@ export const translations = {
       stepCount: "Étape",
       back: "Retour",
       close: "Fermer",
-      step1Title: "CHOISISSEZ VOTRE ESPACE",
-      step1Subtitle: "Sélectionnez votre espace d'entraînement réservé",
-      menCard: "ESPACE HOMMES",
-      womenCard: "ESPACE FEMMES",
-      step2Title: "SÉLECTIONNEZ UN PLAN",
+      step1Title: "Bienvenue",
+      step1Subtitle: "Choisissez votre espace pour commencer.",
+      step1Small: "SÉLECTIONNEZ VOTRE ESPACE",
+      menCard: "Espace Homme",
+      menDesc: "Accès aux installations pour hommes",
+      womenCard: "Espace Femme",
+      womenDesc: "Accès aux installations pour femmes",
+      step2Title: "Choisir votre formule",
+      step2Subtitle: "Sélectionnez un abonnement pour continuer.",
       step3Title: "VOS COORDONNÉES",
       step3Subtitle: "Veuillez renseigner vos informations pour valider votre demande",
-      fullNameLabel: "Nom Complet *",
-      phoneLabel: "Numéro de Téléphone *",
+      fullNameLabel: "Nom complet",
+      phoneLabel: "Numéro de téléphone",
       emailLabel: "Adresse E-mail (Optionnel)",
       notesLabel: "Remarques ou questions particulières",
-      confirmBtn: "CONFIRMER L'INSCRIPTION",
+      bloodGroup: "Groupe sanguin",
+      birthdate: "Date de naissance",
+      duration: "Durée d'abonnement",
+      month: "Mois",
+      forMonths: "pour",
+      confirmBtn: "Confirmer via WhatsApp",
       step4Title: "INSCRIPTION CONFIRMÉE !",
       step4Subtitle: "Merci pour votre confiance. Voici le récapitulatif de votre facture.",
       billTitle: "FACTURE D'ABONNEMENT",
@@ -125,7 +181,23 @@ export const translations = {
       clientLabel: "Membre",
       phoneBillLabel: "Téléphone",
       totalPrice: "Total à régler au club",
-      finishBtn: "TERMINER & FERMER"
+      finishBtn: "TERMINER & FERMER",
+      headerTag: "INSCRIPTION",
+      chooseBtn: "Choisir",
+      waBtn: "WhatsApp",
+      cinNotice: "Merci d'apporter une copie de votre",
+      cinBold: "pièce d'identité (CIN)",
+      cinEnd: "le jour de votre première séance.",
+      errors: {
+        name: "Le nom complet est requis.",
+        phoneReq: "Le numéro est requis.",
+        phoneInv: "Numéro invalide (9 chiffres minimum).",
+        bloodGroup: "Veuillez sélectionner votre groupe sanguin.",
+        birthdate: "La date de naissance est requise."
+      },
+      successText: "Message envoyé sur WhatsApp.",
+      successSub: "Nous vous contacterons très bientôt.",
+      perks: "🎁 T-shirt et Shaker offerts"
     },
     // Footer
     footer: {
@@ -139,9 +211,11 @@ export const translations = {
     nav: {
       schedule: "Schedule",
       pricing: "Pricing",
+      team: "Our Coaches",
+      crossfitSchedule: "CrossFit Schedule",
       products: "Products",
       contact: "Contact",
-      bookNow: "Book Now",
+      bookNow: "Book your session",
     },
     // Hero
     hero: {
@@ -175,6 +249,51 @@ export const translations = {
       perMonth: "/ Month",
       selectPlan: "Select Plan",
       popular: "POPULAR",
+      planNames: {
+        muscCT: "Musculation / Cross Training",
+        muscCF: "Musculation with CrossFit",
+        vip: "VIP Pack",
+        libre: "Single Session"
+      },
+      desc: {
+        muscCT: "Full access to the gym with machines and free weights.",
+        muscCF: "The complete package including classic gym and guided CrossFit sessions.",
+        vip: "The ultimate premium experience at Équinox Sports Club.",
+        libre: "Drop-in and train for a single session, no commitment."
+      },
+      freq: {
+        "1x Semaine": "1x Weekly",
+        "2x Semaine": "2x Weekly",
+        "3x Semaine": "3x Weekly",
+        "4x Semaine": "4x Weekly",
+        "Illimité": "Unlimited",
+        "Mois Libre": "Flexible Month",
+        "Mensuel": "Monthly",
+        "1 Séance": "1 Session"
+      },
+      sessions: {
+        "4 séances / mois": "4 sessions / month",
+        "8 séances / mois": "8 sessions / month",
+        "12 séances / mois": "12 sessions / month",
+        "16 séances / mois": "16 sessions / month",
+        "Accès total": "Total access",
+        "Accès flexible": "Flexible access",
+        "Accès illimité toute la journée": "Unlimited access all day",
+        "Accès unitaire": "Single access",
+        "Accès unitaire — sans engagement": "Single access — no commitment"
+      },
+      benefits: {
+        water: "Free water bottle",
+        towel: "Free towel service",
+        priority: "Priority access",
+        coaching: "Personalized coaching"
+      },
+      bookBtn: "Book",
+      bookVip: "Book VIP",
+      bookSession: "Book a session",
+      seeSchedule: "View Schedule",
+      pricePerMonth: " / month",
+      pricePerSession: " / session",
     },
     // Products
     products: {
@@ -239,18 +358,27 @@ export const translations = {
       stepCount: "Step",
       back: "Back",
       close: "Close",
-      step1Title: "CHOOSE YOUR SPACE",
-      step1Subtitle: "Select your dedicated training area",
-      menCard: "MEN'S AREA",
-      womenCard: "WOMEN'S AREA",
-      step2Title: "SELECT A PLAN",
+      step1Title: "Welcome",
+      step1Subtitle: "Choose your space to begin.",
+      step1Small: "SELECT YOUR SPACE",
+      menCard: "Men's Area",
+      menDesc: "Access to men's facilities",
+      womenCard: "Women's Area",
+      womenDesc: "Access to women's facilities",
+      step2Title: "Choose your plan",
+      step2Subtitle: "Select a membership to continue.",
       step3Title: "YOUR DETAILS",
       step3Subtitle: "Please fill in your information to validate your registration",
-      fullNameLabel: "Full Name *",
-      phoneLabel: "Phone Number *",
+      fullNameLabel: "Full Name",
+      phoneLabel: "Phone Number",
       emailLabel: "Email Address (Optional)",
       notesLabel: "Special notes or questions",
-      confirmBtn: "CONFIRM REGISTRATION",
+      bloodGroup: "Blood Group",
+      birthdate: "Date of Birth",
+      duration: "Subscription Duration",
+      month: "Month(s)",
+      forMonths: "for",
+      confirmBtn: "Confirm via WhatsApp",
       step4Title: "REGISTRATION CONFIRMED!",
       step4Subtitle: "Thank you for your trust. Here is your invoice summary.",
       billTitle: "MEMBERSHIP INVOICE",
@@ -260,7 +388,23 @@ export const translations = {
       clientLabel: "Member",
       phoneBillLabel: "Phone",
       totalPrice: "Total Due at Club",
-      finishBtn: "FINISH & CLOSE"
+      finishBtn: "FINISH & CLOSE",
+      headerTag: "REGISTRATION",
+      chooseBtn: "Choose",
+      waBtn: "WhatsApp",
+      cinNotice: "Please bring a copy of your",
+      cinBold: "ID card (CIN)",
+      cinEnd: "on the day of your first session.",
+      errors: {
+        name: "Full name is required.",
+        phoneReq: "Phone number is required.",
+        phoneInv: "Invalid number (min 9 digits).",
+        bloodGroup: "Please select your blood group.",
+        birthdate: "Date of birth is required."
+      },
+      successText: "Message sent on WhatsApp.",
+      successSub: "We will contact you very soon.",
+      perks: "🎁 Free T-shirt and Shaker"
     },
     // Footer
     footer: {

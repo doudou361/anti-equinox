@@ -1,58 +1,65 @@
+/**
+ * Pricing data for Équinox Sports Club.
+ *
+ * monthlyRate is always a plain number (DA).
+ * The Pricing component uses lib/pricing.js to compute all multi-month totals
+ * from these numbers — never hardcoded.
+ *
+ * Pack Promo static card removed (Phase 2).
+ * Those discounts now live inside BookingModal as live calculation.
+ */
 export const pricingCategories = [
   {
     id: 'musculation_cross_training',
-    name: 'Musculation & Cross Training',
-    description: 'Accès classique à la salle avec accès aux machines et zones de musculation/cross training.',
+    name: 'Musculation / Cross Training',
+    description:
+      'Accès à la salle avec machines et zones de musculation/cross training.',
     plans: [
-      { id: 'mct_1', frequency: '1x Semaine', sessions: '4 séances / Mois', price: '1800 DA' },
-      { id: 'mct_2', frequency: '2x Semaine', sessions: '8 séances / Mois', price: '2500 DA' },
-      { id: 'mct_3', frequency: '3x Semaine', sessions: '12 séances / Mois', price: '3500 DA', recommended: true },
-      { id: 'mct_4', frequency: '4x Semaine', sessions: '16 séances / Mois', price: '4500 DA' },
-      { id: 'mct_unlimited', frequency: 'Illimité', sessions: 'Accès total', price: '6000 DA' },
-    ]
+      { id: 'mct_1',        frequency: '1x Semaine', sessions: '4 séances / mois',  monthlyRate: 1800 },
+      { id: 'mct_2',        frequency: '2x Semaine', sessions: '8 séances / mois',  monthlyRate: 2500 },
+      { id: 'mct_3',        frequency: '3x Semaine', sessions: '12 séances / mois', monthlyRate: 3500, recommended: true },
+      { id: 'mct_4',        frequency: '4x Semaine', sessions: '16 séances / mois', monthlyRate: 4500 },
+      { id: 'mct_unlimited',frequency: 'Illimité',   sessions: 'Accès total',        monthlyRate: 6000 },
+    ],
   },
   {
     id: 'musculation_avec_crossfit',
     name: 'Musculation avec CrossFit',
-    description: 'Le pack complet incluant la musculation classique et les séances encadrées de CrossFit.',
+    description:
+      'Le pack complet incluant la musculation classique et les séances encadrées de CrossFit.',
     plans: [
-      { id: 'mcf_2', frequency: '2x Semaine', sessions: '8 séances / Mois', price: '3000 DA' },
-      { id: 'mcf_3', frequency: '3x Semaine', sessions: '12 séances / Mois', price: '4000 DA', recommended: true },
-      { id: 'mcf_4', frequency: '4x Semaine', sessions: '16 séances / Mois', price: '5000 DA' },
-      { id: 'mcf_libre', frequency: 'Mois Libre', sessions: 'Accès flexible', price: '7000 DA' },
-    ]
-  },
-  {
-    id: 'pack_promo',
-    name: 'Pack Promo',
-    description: 'Valable sur tous les abonnements. Engagez-vous sur la durée et économisez.',
-    plans: [
-      { id: 'promo_3', frequency: '3 Mois', sessions: 'Engagement trimestriel', price: 'Remise -12%' },
-      { id: 'promo_6', frequency: '6 Mois', sessions: 'Engagement semestriel', price: '1 Mois Gratuit', recommended: true },
-      { id: 'promo_12', frequency: '12 Mois', sessions: 'Engagement annuel', price: '2 Mois Gratuits + T-shirt + Shaker' },
-    ]
+      { id: 'mcf_2',    frequency: '2x Semaine', sessions: '8 séances / mois',  monthlyRate: 3000 },
+      { id: 'mcf_3',    frequency: '3x Semaine', sessions: '12 séances / mois', monthlyRate: 4000, recommended: true },
+      { id: 'mcf_4',    frequency: '4x Semaine', sessions: '16 séances / mois', monthlyRate: 5000 },
+      { id: 'mcf_libre',frequency: 'Mois Libre', sessions: 'Accès flexible',    monthlyRate: 7000 },
+    ],
   },
   {
     id: 'pack_vip',
-    name: 'Pack VIP 👑',
-    description: "L'expérience premium absolue de l'Equinox Sports Club.",
+    name: 'Pack VIP',
+    description: "L'expérience premium absolue de l'Équinox Sports Club.",
     plans: [
-      { 
-        id: 'vip_1', 
-        frequency: 'Mensuel', 
-        sessions: 'Accès illimité toute la journée et le mois', 
-        price: '10000 DA / Mois', 
-        benefits: ["Bouteille d'eau gratuite", "Serviette", "Accès prioritaire"] 
-      }
-    ]
+      {
+        id: 'vip_1',
+        frequency: 'Mensuel',
+        sessions: 'Accès illimité toute la journée',
+        monthlyRate: 10000,
+        benefits: [
+          "Bouteille d'eau gratuite",
+          'Serviette offerte',
+          'Accès prioritaire',
+          'Coaching personnalisé',
+        ],
+      },
+    ],
   },
-
   {
     id: 'seance_libre',
     name: 'Séance Libre',
-    description: 'Venez vous entraîner pour une seule séance, sans engagement.',
+    description:
+      'Venez vous entraîner pour une seule séance, sans engagement.',
     plans: [
-      { id: 'seance_1', frequency: '1 Séance', sessions: 'Accès unitaire', price: '500 DA' }
-    ]
-  }
+      { id: 'seance_1', frequency: '1 Séance', sessions: 'Accès unitaire', monthlyRate: 500 },
+    ],
+  },
 ];

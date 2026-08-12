@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { NUTRITION_ENABLED } from '../config/features';
 
-const Navbar = ({ onBookClick, onContactClick, onNutritionClick, onHomeClick }) => {
+const Navbar = ({ onBookClick, onContactClick, onCrossfitClick, onNutritionClick, onHomeClick }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { lang, toggleLanguage, t } = useLanguage();
@@ -85,13 +86,31 @@ const Navbar = ({ onBookClick, onContactClick, onNutritionClick, onHomeClick }) 
             >
               {t('nav.pricing')}
             </a>
+            {NUTRITION_ENABLED && (
+              <button
+                onClick={onNutritionClick}
+                style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer', transition: 'color 0.3s', whiteSpace: 'nowrap', padding: 0 }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+              >
+                Nutrition
+              </button>
+            )}
+            <a href="#team"
+              style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500, fontSize: '0.95rem', transition: 'color 0.3s', whiteSpace: 'nowrap' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            >
+              {t('nav.team')}
+            </a>
             <button
-              onClick={onNutritionClick}
+              onClick={onCrossfitClick}
+              id="btn-crossfit-schedule"
               style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontWeight: 500, fontSize: '0.95rem', cursor: 'pointer', transition: 'color 0.3s', whiteSpace: 'nowrap', padding: 0 }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--gold-primary)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
             >
-              Nutrition
+              {t('nav.crossfitSchedule')}
             </button>
             <button
               onClick={onContactClick}
@@ -196,11 +215,22 @@ const Navbar = ({ onBookClick, onContactClick, onNutritionClick, onHomeClick }) 
           <a href="#products" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '1.25rem', fontWeight: 500 }}>
             {t('nav.products')}
           </a>
-          <button
-            onClick={() => { setIsMobileMenuOpen(false); onNutritionClick?.(); }}
+          {NUTRITION_ENABLED && (
+            <button
+              onClick={() => { setIsMobileMenuOpen(false); onNutritionClick?.(); }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.25rem', fontWeight: 500, cursor: 'pointer' }}
+            >
+              Nutrition
+            </button>
+          )}
+          <a href="#team" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'var(--text-main)', textDecoration: 'none', fontSize: '1.25rem', fontWeight: 500 }}>
+            {t('nav.team')}
+          </a>
+          <button 
+            onClick={() => { setIsMobileMenuOpen(false); onCrossfitClick(); }} 
             style={{ background: 'none', border: 'none', color: 'var(--text-main)', fontSize: '1.25rem', fontWeight: 500, cursor: 'pointer' }}
           >
-            Nutrition
+            {t('nav.crossfitSchedule')}
           </button>
           <button 
             onClick={() => { setIsMobileMenuOpen(false); onContactClick(); }} 
