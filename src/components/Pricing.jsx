@@ -168,7 +168,7 @@ const Pricing = ({ onPlanBook }) => {
   const libre   = pricingCategories.find((c) => c.id === 'seance_libre');
 
   const openModal = (catName, plan) =>
-    onPlanBook({ name: catName, frequency: plan.frequency, monthlyRate: plan.monthlyRate });
+    onPlanBook({ id: plan.id, name: catName, frequency: plan.frequency, monthlyRate: plan.monthlyRate });
 
   return (
     <>

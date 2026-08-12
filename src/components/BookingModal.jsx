@@ -164,7 +164,7 @@ const PlanPickerRow = ({ catKey, plan, special, onSelect, t }) => (
     <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--theme-primary)', whiteSpace: 'nowrap' }}>
       {formatDA(plan.monthlyRate)}
     </span>
-    <ChooseBtn onClick={() => onSelect({ catKey, frequency: plan.frequency, monthlyRate: plan.monthlyRate, name: plan.name })} label={t('bookingModal.chooseBtn')} />
+    <ChooseBtn onClick={() => onSelect({ id: plan.id, catKey, frequency: plan.frequency, monthlyRate: plan.monthlyRate, name: plan.name })} label={t('bookingModal.chooseBtn')} />
   </div>
 );
 
@@ -286,12 +286,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
             phone: phone,
             gender: gender,
           },
-          planData: {
-            name: plan.name || plan.catKey,
-            frequency: plan.frequency,
-            sessions: plan.sessions || '-',
-            monthlyRate: total
-          }
+          planId: plan.id,
+          months,
         })
       });
 
