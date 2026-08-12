@@ -253,6 +253,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
   const [errors,     setErrors]     = useState({});
 
   const total       = calculatePlanTotal(plan.monthlyRate, months);
+  const full        = plan.monthlyRate * months;
+  const saved       = full - total;
   const show12Perk  = months === 12;
 
   const clear = (key) => setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
@@ -307,7 +309,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
               fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
               transition: 'all 0.18s', whiteSpace: 'nowrap',
             }}>
-              {m} {t('bookingModal.month')}
+              {m} {m === 1 ? t('bookingModal.month') : t('bookingModal.months')}
             </button>
           ))}
         </div>
@@ -328,7 +330,14 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
           {formatDA(total)}
         </div>
         {months > 1 && (
-          <div style={{ fontSize: '12px', color: '#9A948A', marginTop: '0.3rem' }}>{t('bookingModal.forMonths')} {months} {t('bookingModal.month').toLowerCase()}</div>
+          <div style={{ fontSize: '12px', color: '#9A948A', marginTop: '0.3rem' }}>{t('bookingModal.forMonths')} {months} {t('bookingModal.months').toLowerCase()}</div>
+        )}
+        {saved > 0 && (
+          <div style={{ fontSize: '12px', color: '#10b981', fontWeight: 600, marginTop: '0.4rem' }}>
+            {months === 6 && `${t('bookingModal.oneMonthFree')} · `}
+            {months === 12 && `${t('bookingModal.twoMonthsFree')} · `}
+            {t('bookingModal.save')} {formatDA(saved)}
+          </div>
         )}
         {show12Perk && (
           <div style={{
