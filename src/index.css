@@ -317,3 +317,19 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: flex-start;
   }
 }
+
+/* Visibility Classes (Hero Video Breakpoints) */
+.desktop-video {
+  display: none;
+}
+.mobile-video {
+  display: block;
+}
+@media (min-width: 768px) {
+  .desktop-video {
+    display: block;
+  }
+  .mobile-video {
+    display: none;
+  }
+}

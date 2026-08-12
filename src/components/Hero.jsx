@@ -4,29 +4,15 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Hero = () => {
   const { t } = useLanguage();
-  const [isMobile, setIsMobile] = useState(false);
   
   // Media carousel state: 'video' -> 0 -> 1 -> 2 -> ... -> 16 -> 'video'
   const [mediaPhase, setMediaPhase] = useState('video');
-  const videoRef = useRef(null);
+  
+  // Separate refs for desktop and mobile videos
+  const desktopVideoRef = useRef(null);
+  const mobileVideoRef = useRef(null);
 
   const IMAGES = Array.from({length: 17}, (_, i) => `/media/slide-${i+1}.jpg.jpg`);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Initialize phase
-  useEffect(() => {
-    if (isMobile) {
-      setMediaPhase(0); // skip video entirely on mobile
-    } else {
-      setMediaPhase('video');
-    }
-  }, [isMobile]);
 
   // Handle image timer
   useEffect(() => {
@@ -36,23 +22,30 @@ const Hero = () => {
         if (mediaPhase < IMAGES.length - 1) {
           setMediaPhase(mediaPhase + 1);
         } else {
-          // loop back to video on desktop, or back to 0 on mobile
-          setMediaPhase(isMobile ? 0 : 'video');
+          // loop back to video
+          setMediaPhase('video');
         }
       }, 5000); // 5 seconds per image
     }
     return () => clearTimeout(timer);
-  }, [mediaPhase, IMAGES.length, isMobile]);
+  }, [mediaPhase, IMAGES.length]);
 
-  // Handle video auto-play when switching back to video
+  // Handle video auto-play when switching back to video phase
   useEffect(() => {
-    if (mediaPhase === 'video' && videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+    if (mediaPhase === 'video') {
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.play().catch(e => console.log('Auto-play prevented (desktop):', e));
+      }
+      if (mobileVideoRef.current) {
+        mobileVideoRef.current.currentTime = 0;
+        mobileVideoRef.current.play().catch(e => console.log('Auto-play prevented (mobile):', e));
+      }
     }
   }, [mediaPhase]);
 
   const handleVideoEnded = () => {
+    // Both videos are roughly the same length, just advance when the first one ends
     setMediaPhase(0);
   };
 
@@ -67,24 +60,47 @@ const Hero = () => {
     }}>
       {/* Background Media */}
       <AnimatePresence mode="popLayout">
-        {mediaPhase === 'video' && !isMobile ? (
-          <motion.video
-            key="video"
-            ref={videoRef}
-            src="/media/equinox-hero.mp4.mp4"
-            poster="/hero-bg.jpg"
-            muted
-            playsInline
-            onEnded={handleVideoEnded}
+        {mediaPhase === 'video' ? (
+          <motion.div
+            key="video-container"
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.5 }}
             style={{
-              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-              objectFit: 'cover', zIndex: 1
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1
             }}
-          />
+          >
+            {/* Desktop Video */}
+            <div className="desktop-video" style={{ width: '100%', height: '100%' }}>
+              <video
+                ref={desktopVideoRef}
+                src="/media/equinox-hero.mp4.mp4"
+                poster="/media/hero-poster-desktop.jpg"
+                muted
+                playsInline
+                preload="none"
+                autoPlay
+                onEnded={handleVideoEnded}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+            
+            {/* Mobile Video */}
+            <div className="mobile-video" style={{ width: '100%', height: '100%' }}>
+              <video
+                ref={mobileVideoRef}
+                src="/media/equinox-hero-mobile.mp4"
+                poster="/media/hero-poster-mobile.jpg"
+                muted
+                playsInline
+                preload="none"
+                autoPlay
+                onEnded={handleVideoEnded}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          </motion.div>
         ) : (
           <motion.div
             key={`img-${mediaPhase}`}
