@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertCircle, Crown, ArrowLeft, User, Users } from 'lucide-react';
-import { calculatePlanTotal, getSavingsInfo, formatDA } from '../lib/pricing';
-import { pricingCategories } from '../data/pricing';
+import { AlertCircle, Crown, User, Users } from 'lucide-react';
+import { calculatePlanTotal, formatDA, getCategory } from '../lib/pricing';
+import { SEANCE_LIBRE_WA_URL } from '../lib/whatsapp';
+import { validateNamePhone } from '../lib/validation';
 import { useLanguage } from '../context/LanguageContext';
+import { WhatsAppIcon } from './icons';
+import Field from './ui/Field';
+import { ModalOverlay, ModalCard, ModalHeader } from './ui/Modal';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const BLOOD_GROUPS = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 const DURATIONS    = [1, 3, 6, 12];
-const WA_NUMBER    = '213562838455';
 
-const SL_WA_URL =
-  'https://wa.me/' + WA_NUMBER + '?text=' +
-  encodeURIComponent('Bonjour 👋, je souhaite réserver une Séance Libre (500 DA) à Équinox Sports Club.');
-
-// ── Shared icons ──────────────────────────────────────────────────────────────
-
-const WAIcon = ({ size = 17 }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-);
+/** Per-space accent palette; Homme (gold) doubles as the default. */
+const THEMES = {
+  Homme: { primary: '#C5A059', light: '#EFCC91', rgb: '197,160,89' },
+  Femme: { primary: '#E27694', light: '#F49BB2', rgb: '226,118,148' },
+};
 
 // ── ChooseBtn — pill used in plan picker ──────────────────────────────────────
 
@@ -51,13 +48,37 @@ const ChooseBtn = ({ onClick, label = 'Choisir', isWA = false }) => {
         flexShrink: 0,
       }}
     >
-      {isWA && <WAIcon />}
+      {isWA && <WhatsAppIcon />}
       {label}
     </button>
   );
 };
 
 // ── Step 0 — Gender picker ────────────────────────────────────────────────────
+
+const GenderCard = ({ onClick, icon, accentRgb, accentColor, title, description }) => (
+  <button
+    onClick={onClick}
+    style={{
+      display: 'flex', alignItems: 'center', gap: '1rem',
+      padding: '1.25rem', borderRadius: '12px',
+      background: 'rgba(255,255,255,0.03)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      color: '#F4F4F5', cursor: 'pointer', transition: 'all 0.2s',
+      textAlign: 'left'
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.background = `rgba(${accentRgb},0.08)`; e.currentTarget.style.borderColor = `rgba(${accentRgb},0.3)`; }}
+    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+  >
+    <div style={{ background: `rgba(${accentRgb},0.15)`, padding: '0.75rem', borderRadius: '50%', color: accentColor }}>
+      {icon}
+    </div>
+    <div>
+      <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 700 }}>{title}</h3>
+      <p style={{ margin: 0, fontSize: '0.85rem', color: '#9A948A' }}>{description}</p>
+    </div>
+  </button>
+);
 
 const GenderPicker = ({ onSelect }) => {
   const { t } = useLanguage();
@@ -70,49 +91,23 @@ const GenderPicker = ({ onSelect }) => {
         {t('bookingModal.step1Small')}
       </p>
 
-      <button
+      <GenderCard
         onClick={() => onSelect('Homme')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '1rem',
-          padding: '1.25rem', borderRadius: '12px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          color: '#F4F4F5', cursor: 'pointer', transition: 'all 0.2s',
-          textAlign: 'left'
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(197,160,89,0.08)'; e.currentTarget.style.borderColor = 'rgba(197,160,89,0.3)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-      >
-        <div style={{ background: 'rgba(197,160,89,0.15)', padding: '0.75rem', borderRadius: '50%', color: '#C5A059' }}>
-          <User size={24} />
-        </div>
-        <div>
-          <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 700 }}>{t('bookingModal.menCard')}</h3>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#9A948A' }}>{t('bookingModal.menDesc')}</p>
-        </div>
-      </button>
+        icon={<User size={24} />}
+        accentRgb={THEMES.Homme.rgb}
+        accentColor={THEMES.Homme.primary}
+        title={t('bookingModal.menCard')}
+        description={t('bookingModal.menDesc')}
+      />
 
-      <button
+      <GenderCard
         onClick={() => onSelect('Femme')}
-        style={{
-          display: 'flex', alignItems: 'center', gap: '1rem',
-          padding: '1.25rem', borderRadius: '12px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          color: '#F4F4F5', cursor: 'pointer', transition: 'all 0.2s',
-          textAlign: 'left'
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(226,118,148,0.08)'; e.currentTarget.style.borderColor = 'rgba(226,118,148,0.3)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-      >
-        <div style={{ background: 'rgba(226,118,148,0.15)', padding: '0.75rem', borderRadius: '50%', color: '#E27694' }}>
-          <Users size={24} />
-        </div>
-        <div>
-          <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.1rem', fontWeight: 700 }}>{t('bookingModal.womenCard')}</h3>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#9A948A' }}>{t('bookingModal.womenDesc')}</p>
-        </div>
-      </button>
+        icon={<Users size={24} />}
+        accentRgb={THEMES.Femme.rgb}
+        accentColor={THEMES.Femme.primary}
+        title={t('bookingModal.womenCard')}
+        description={t('bookingModal.womenDesc')}
+      />
     </div>
   );
 };
@@ -168,9 +163,9 @@ const PlanPickerRow = ({ catKey, plan, special, onSelect, t }) => (
 
 const PlanPicker = ({ onSelect }) => {
   const { t } = useLanguage();
-  const muscCT = pricingCategories.find((c) => c.id === 'musculation_cross_training');
-  const muscCF = pricingCategories.find((c) => c.id === 'musculation_avec_crossfit');
-  const vip    = pricingCategories.find((c) => c.id === 'pack_vip');
+  const muscCT = getCategory('musculation_cross_training');
+  const muscCF = getCategory('musculation_avec_crossfit');
+  const vip    = getCategory('pack_vip');
 
   return (
     <div style={{ padding: '0.25rem 1.5rem 1.5rem' }}>
@@ -201,42 +196,8 @@ const PlanPicker = ({ onSelect }) => {
           <span style={{ fontSize: '11px', color: '#9A948A' }}>{t('pricing.sessions.Accès unitaire — sans engagement')}</span>
         </div>
         <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--theme-primary)', whiteSpace: 'nowrap' }}>500 DA</span>
-        <ChooseBtn onClick={() => window.open(SL_WA_URL, '_blank')} label={t('bookingModal.waBtn')} isWA />
+        <ChooseBtn onClick={() => window.open(SEANCE_LIBRE_WA_URL, '_blank')} label={t('bookingModal.waBtn')} isWA />
       </div>
-    </div>
-  );
-};
-
-// ── Reusable text field ───────────────────────────────────────────────────────
-
-const Field = ({ label, type = 'text', placeholder, value, onChange, error }) => {
-  const [focused, setFocused] = useState(false);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-      <label style={{
-        fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px',
-        color: error ? '#e07070' : '#9A948A', fontWeight: 600,
-      }}>
-        {label}
-      </label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          padding: '0.85rem 1rem',
-          background: '#0A0A0A',
-          border: `1px solid ${error ? '#e05555' : focused ? 'var(--theme-primary)' : 'rgba(var(--theme-rgb), 0.40)'}`,
-          borderRadius: '8px', color: '#F4F4F5', outline: 'none',
-          fontSize: '0.95rem', width: '100%', transition: 'border-color 0.2s',
-          boxShadow: focused ? '0 0 0 3px rgba(var(--theme-rgb), 0.12)' : 'none',
-          colorScheme: 'dark',
-        }}
-      />
-      {error && <span style={{ fontSize: '12px', color: '#e07070', fontWeight: 500 }}>{error}</span>}
     </div>
   );
 };
@@ -262,11 +223,11 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = {};
-    if (!name.trim()) errs.name = t('bookingModal.errors.name');
-    const digits = phone.replace(/\D/g, '');
-    if (!phone.trim())          errs.phone = t('bookingModal.errors.phoneReq');
-    else if (digits.length < 9) errs.phone = t('bookingModal.errors.phoneInv');
+    const errs = validateNamePhone({ name, phone }, {
+      name: t('bookingModal.errors.name'),
+      phoneRequired: t('bookingModal.errors.phoneReq'),
+      phoneInvalid: t('bookingModal.errors.phoneInv'),
+    });
     if (!bloodGroup) errs.bloodGroup = t('bookingModal.errors.bloodGroup');
     if (!birthdate)  errs.birthdate  = t('bookingModal.errors.birthdate');
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
@@ -541,24 +502,6 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
   );
 };
 
-// ── Theme Config ──────────────────────────────────────────────────────────────
-
-const getTheme = (gender) => {
-  if (gender === 'Femme') {
-    return {
-      primary: '#E27694', // A premium rose pink
-      light: '#F49BB2',
-      rgb: '226,118,148'
-    };
-  }
-  // Default / Homme (Gold)
-  return {
-    primary: '#C5A059',
-    light: '#EFCC91',
-    rgb: '197,160,89'
-  };
-};
-
 // ── BookingModal — root component ─────────────────────────────────────────────
 //
 // Step flow:
@@ -574,7 +517,7 @@ const BookingModal = ({ plan: initialPlan = null, onClose }) => {
   const [plan,      setPlan]      = useState(initialPlan);
   const [submitted, setSubmitted] = useState(false);
 
-  const theme = getTheme(gender);
+  const theme = THEMES[gender] ?? THEMES.Homme;
 
   const handleGenderSelect = (selectedGender) => {
     setGender(selectedGender);
@@ -611,98 +554,25 @@ const BookingModal = ({ plan: initialPlan = null, onClose }) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      onClick={onClose}
+    <ModalOverlay
+      onClose={onClose}
       style={{
-        position: 'fixed', inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.82)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        zIndex: 4000,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '1rem', overflowY: 'auto',
         // Define theme variables on the root container
         '--theme-primary': theme.primary,
         '--theme-light': theme.light,
         '--theme-rgb': theme.rgb,
       }}
     >
-      {/* Modal box */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 24 }}
-        animate={{ scale: 1,    opacity: 1, y: 0  }}
-        exit={   { scale: 0.95, opacity: 0, y: 24 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#121212',
-          border: '1px solid rgba(var(--theme-rgb), 0.35)',
-          borderRadius: '18px',
-          width: '100%', maxWidth: '500px',
-          maxHeight: '90vh', overflowY: 'auto',
-          boxShadow: '0 28px 70px rgba(0,0,0,0.90), 0 0 50px rgba(var(--theme-rgb), 0.07)',
-          transition: 'border-color 0.4s, box-shadow 0.4s', // Smooth transition when theme changes
-        }}
-      >
-        {/* Sticky header */}
-        <div style={{
-          padding: '1.4rem 1.5rem 1rem',
-          borderBottom: '1px solid rgba(var(--theme-rgb), 0.15)',
-          display: 'flex', alignItems: 'flex-start',
-          justifyContent: 'space-between', gap: '1rem',
-          position: 'sticky', top: 0, background: '#121212', zIndex: 1,
-          transition: 'border-color 0.4s',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', flex: 1 }}>
-            {step !== 'gender' && (
-              <button
-                onClick={handleBack}
-                title={t('bookingModal.back')}
-                style={{
-                  background: 'none', border: 'none', color: '#9A948A',
-                  cursor: 'pointer', padding: '2px 0 0',
-                  transition: 'color 0.2s', flexShrink: 0,
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--theme-primary)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#9A948A')}
-              >
-                <ArrowLeft size={18} />
-              </button>
-            )}
-            <div>
-              <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: '#9A948A', fontWeight: 700, margin: '0 0 0.25rem' }}>
-                {t('bookingModal.headerTag')}
-              </p>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F4F4F5', margin: 0, fontFamily: 'var(--font-heading)', lineHeight: 1.2 }}>
-                {headerTitle}
-              </h2>
-              {headerSub && (
-                <p style={{ fontSize: '13px', color: 'var(--theme-primary)', margin: '0.2rem 0 0', fontWeight: 500 }}>
-                  {headerSub}
-                </p>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            title={t('bookingModal.close')}
-            style={{
-              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)',
-              color: '#9A948A', width: '34px', height: '34px', borderRadius: '50%',
-              cursor: 'pointer', flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#9A948A'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-          >
-            <X size={16} />
-          </button>
-        </div>
+      <ModalCard>
+        <ModalHeader
+          tag={t('bookingModal.headerTag')}
+          title={headerTitle}
+          subtitle={headerSub}
+          onBack={step === 'gender' ? undefined : handleBack}
+          backTitle={t('bookingModal.back')}
+          onClose={onClose}
+          closeTitle={t('bookingModal.close')}
+        />
 
         {/* Step content — animated swap */}
         <AnimatePresence mode="wait">
@@ -729,8 +599,8 @@ const BookingModal = ({ plan: initialPlan = null, onClose }) => {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
-    </motion.div>
+      </ModalCard>
+    </ModalOverlay>
   );
 };
 

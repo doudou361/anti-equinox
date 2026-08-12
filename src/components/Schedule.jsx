@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { scheduleData } from '../data/schedule';
 import { useLanguage } from '../context/LanguageContext';
+import SectionHeader from './ui/SectionHeader';
 
 const Schedule = () => {
   const [activeTab, setActiveTab] = useState('hommes'); // 'hommes', 'femmes'
@@ -28,20 +29,7 @@ const Schedule = () => {
     <section id="schedule" style={{ padding: '6rem 0', backgroundColor: 'var(--bg-dark)' }}>
       <div className="container">
         
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          style={{ textAlign: 'center', marginBottom: '4rem' }}
-        >
-          <h2 style={{ fontSize: '3rem', color: 'var(--text-main)', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>
-            {t('schedule.title')}
-          </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-            {t('schedule.subtitle')}
-          </p>
-        </motion.div>
+        <SectionHeader title={t('schedule.title')} subtitle={t('schedule.subtitle')} />
 
         {/* Custom Tabs */}
         <div style={{

@@ -1,6 +1,36 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { MAPS_URL, MAPS_EMBED_URL, PHONE_HREF, SOCIAL_LINKS } from '../lib/contact';
+import { goldBorderHover, liftHover } from '../lib/hover';
+import { SocialIcon } from './icons';
+import { ModalOverlay, ModalCloseButton } from './ui/Modal';
+
+const contactCardStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1rem',
+  padding: '0.85rem 1.25rem',
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(197, 160, 89, 0.15)',
+  borderRadius: '12px',
+  color: 'var(--text-main)',
+  textDecoration: 'none',
+  transition: 'all 0.3s'
+};
+
+const socialButtonStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+  padding: '0.75rem 1.5rem',
+  color: '#fff',
+  textDecoration: 'none',
+  borderRadius: '12px',
+  fontWeight: 600,
+  fontSize: '1rem',
+  transition: 'transform 0.2s'
+};
 
 const ContactModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
@@ -20,26 +50,11 @@ const ContactModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(8px)',
-        zIndex: 2000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        overflowY: 'auto'
-      }}
+    <ModalOverlay
+      onClose={onClose}
+      zIndex={2000}
+      blur="8px"
+      backdrop="rgba(0, 0, 0, 0.85)"
     >
       <motion.div 
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -59,31 +74,17 @@ const ContactModal = ({ isOpen, onClose }) => {
           position: 'relative'
         }}
       >
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '1.25rem',
-            right: '1.25rem',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'var(--text-muted)',
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            cursor: 'pointer',
-            fontSize: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+        <ModalCloseButton
+          onClose={onClose}
+          title={t('bookingModal.close')}
+          size={40}
+          color="var(--text-muted)"
+          absolute
+          offset="1.25rem"
+          style={{ fontSize: '1.25rem' }}
         >
           ✕
-        </button>
+        </ModalCloseButton>
 
         {/* Modal Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -107,23 +108,11 @@ const ContactModal = ({ isOpen, onClose }) => {
             {/* Quick Contact Badges */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <a 
-                href="https://maps.google.com/?q=P982+X7C+EQUINOX+sport+club,+Ouled+Hedadj" 
+                href={MAPS_URL}
                 target="_blank" 
                 rel="noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.85rem 1.25rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(197, 160, 89, 0.15)',
-                  borderRadius: '12px',
-                  color: 'var(--text-main)',
-                  textDecoration: 'none',
-                  transition: 'all 0.3s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--gold-primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(197, 160, 89, 0.15)'}
+                style={contactCardStyle}
+                {...goldBorderHover}
               >
                 <span style={{ fontSize: '1.5rem', color: 'var(--gold-primary)' }}>📍</span>
                 <div>
@@ -133,21 +122,9 @@ const ContactModal = ({ isOpen, onClose }) => {
               </a>
 
               <a 
-                href="tel:0562838455"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  padding: '0.85rem 1.25rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(197, 160, 89, 0.15)',
-                  borderRadius: '12px',
-                  color: 'var(--text-main)',
-                  textDecoration: 'none',
-                  transition: 'all 0.3s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--gold-primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(197, 160, 89, 0.15)'}
+                href={PHONE_HREF}
+                style={contactCardStyle}
+                {...goldBorderHover}
               >
                 <span style={{ fontSize: '1.5rem', color: 'var(--gold-primary)' }}>📞</span>
                 <div>
@@ -243,7 +220,7 @@ const ContactModal = ({ isOpen, onClose }) => {
           }}>
             <iframe 
               title="Equinox Sports Club Location"
-              src="https://maps.google.com/maps?q=P982%2BX7C%20EQUINOX%20sport%20club,%20Ouled%20Hedadj&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              src={MAPS_EMBED_URL}
               width="100%" 
               height="100%" 
               style={{ border: 0, minHeight: '320px', filter: 'brightness(0.9) contrast(1.1)' }} 
@@ -268,109 +245,23 @@ const ContactModal = ({ isOpen, onClose }) => {
           </div>
           
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a 
-              href="https://www.instagram.com/equinoxsports_club/" 
-              target="_blank" 
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1.5rem',
-                background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                color: '#fff',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '1rem',
-                boxShadow: '0 4px 15px rgba(220, 39, 67, 0.3)',
-                transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-              <span>Instagram Officiel</span>
-            </a>
-
-            <a 
-              href="https://www.instagram.com/equinoxsports__club/?hl=en" 
-              target="_blank" 
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1.5rem',
-                background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                color: '#fff',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '1rem',
-                boxShadow: '0 4px 15px rgba(220, 39, 67, 0.3)',
-                transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-              <span>Instagram Femmes</span>
-            </a>
-
-            <a 
-              href="https://www.instagram.com/equinox.nutrition_/" 
-              target="_blank" 
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1.5rem',
-                background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-                color: '#fff',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '1rem',
-                boxShadow: '0 4px 15px rgba(220, 39, 67, 0.3)',
-                transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-              <span>Instagram Nutrition</span>
-            </a>
-
-            <a 
-              href="https://www.facebook.com/profile.php?id=61554660353364" 
-              target="_blank" 
-              rel="noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1.5rem',
-                background: '#1877F2',
-                color: '#fff',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '1rem',
-                boxShadow: '0 4px 15px rgba(24, 119, 242, 0.3)',
-                transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-              <span>Facebook Equinox Sports Club</span>
-            </a>
+            {SOCIAL_LINKS.map((link) => (
+              <a
+                key={link.id}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...socialButtonStyle, background: link.background, boxShadow: link.shadow }}
+                {...liftHover}
+              >
+                <SocialIcon network={link.network} />
+                <span>{link.label}</span>
+              </a>
+            ))}
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </ModalOverlay>
   );
 };
 
