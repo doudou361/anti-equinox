@@ -78,11 +78,11 @@ describe('Pricing', () => {
     const firstPlan = category('musculation_cross_training').plans[0];
 
     await user.click(screen.getAllByRole('button', { name: fr.bookBtn })[0]);
-    expect(onPlanBook).toHaveBeenCalledWith({
+    expect(onPlanBook).toHaveBeenCalledWith(expect.objectContaining({
       name: expect.any(String),
       frequency: firstPlan.frequency,
       monthlyRate: firstPlan.monthlyRate,
-    });
+    }));
   });
 
   it('books the VIP plan with its own button', async () => {
@@ -91,11 +91,11 @@ describe('Pricing', () => {
     const vip = category('pack_vip');
 
     await user.click(screen.getByRole('button', { name: fr.bookVip }));
-    expect(onPlanBook).toHaveBeenCalledWith({
+    expect(onPlanBook).toHaveBeenCalledWith(expect.objectContaining({
       name: vip.name,
       frequency: vip.plans[0].frequency,
       monthlyRate: vip.plans[0].monthlyRate,
-    });
+    }));
   });
 
   it('sends the séance libre straight to WhatsApp instead of the modal', async () => {

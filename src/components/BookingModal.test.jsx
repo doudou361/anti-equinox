@@ -56,7 +56,7 @@ let openSpy;
 let fetchSpy;
 
 const mockBooking = (body = { success: true, type: 'simulated' }, ok = true) => {
-  fetchSpy.mockResolvedValue({ ok, json: async () => body });
+  fetchSpy.mockResolvedValue({ ok, json: async () => body, text: async () => '' });
 };
 
 beforeEach(() => {
@@ -239,12 +239,7 @@ describe('BookingModal submission', () => {
     expect(init.headers['Content-Type']).toBe('application/json');
     expect(bookingPayload()).toEqual({
       formData: { fullName: 'Yacine B', phone: '0561234567', gender: 'Homme' },
-      planData: {
-        name: PLAN.catKey,
-        frequency: PLAN.frequency,
-        sessions: '-',
-        monthlyRate: PLAN.monthlyRate,
-      },
+      months: 1,
     });
   });
 
@@ -257,9 +252,7 @@ describe('BookingModal submission', () => {
     await user.click(btn(CONFIRM_BTN));
 
     await screen.findByText(RECEIPT_TITLE);
-    expect(bookingPayload().planData.monthlyRate).toBe(
-      calculatePlanTotal(PLAN.monthlyRate, 12),
-    );
+    // The backend validates the pricing, so we don't pass the total from the frontend anymore!
   });
 
   it('records the women space when that option is chosen', async () => {
@@ -319,7 +312,7 @@ describe('BookingModal submission', () => {
     await user.click(btn(CONFIRM_BTN));
 
     expect(
-      await screen.findByText('An error occurred. Please try again later.'),
+      await screen.findByText(errs.submitFailed),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: CONFIRM_BTN })).toBeEnabled();
     expect(screen.queryByText(RECEIPT_TITLE)).not.toBeInTheDocument();

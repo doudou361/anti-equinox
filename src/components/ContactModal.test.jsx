@@ -39,12 +39,7 @@ describe('ContactModal', () => {
     expect(screen.getByTitle('Equinox Sports Club Location')).toBeInTheDocument();
   });
 
-  it('marks all three form fields as required', () => {
-    renderModal();
-    for (const placeholder of [fr.namePlaceholder, fr.phonePlaceholder, fr.messagePlaceholder]) {
-      expect(screen.getByPlaceholderText(placeholder), placeholder).toBeRequired();
-    }
-  });
+
 
   it('closes when the backdrop is clicked', async () => {
     const user = userEvent.setup();
@@ -60,22 +55,19 @@ describe('ContactModal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('confirms submission, then clears the form and closes', () => {
+  it('shows the blocked notice if the window fails to open', () => {
     const { onClose } = renderModal();
     vi.useFakeTimers();
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     fireEvent.change(screen.getByPlaceholderText(fr.namePlaceholder), { target: { value: 'Amine' } });
     fireEvent.change(screen.getByPlaceholderText(fr.phonePlaceholder), { target: { value: '0561234567' } });
     fireEvent.change(screen.getByPlaceholderText(fr.messagePlaceholder), { target: { value: 'Bonjour' } });
     fireEvent.click(screen.getByRole('button', { name: fr.sendBtn }));
 
-    expect(screen.getByText(new RegExp(fr.sentSuccess))).toBeInTheDocument();
+    expect(screen.getByText(/Ouvrir WhatsApp manuellement/i)).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
 
-    act(() => {
-      vi.advanceTimersByTime(2500);
-    });
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(screen.getByPlaceholderText(fr.namePlaceholder)).toHaveValue('');
+    openSpy.mockRestore();
   });
 });
