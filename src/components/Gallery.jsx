@@ -5,8 +5,8 @@ const IMAGES = Array.from({length: 14}, (_, i) => `/media/slide-${i+1}.jpg.jpg`)
 
 const Gallery = () => {
   return (
-    <section id="gallery" style={{ padding: '6rem 2rem', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <section id="gallery" style={{ padding: '6rem 0', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="container">
         
         {/* Intro */}
         <motion.div

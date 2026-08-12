@@ -25,8 +25,8 @@ const Schedule = () => {
   };
 
   return (
-    <section id="schedule" style={{ padding: '6rem 2rem', backgroundColor: 'var(--bg-dark)' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <section id="schedule" style={{ padding: '6rem 0', backgroundColor: 'var(--bg-dark)' }}>
+      <div className="container">
         
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
