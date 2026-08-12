@@ -246,7 +246,7 @@ const Field = ({ label, type = 'text', placeholder, value, onChange, error, maxL
 
 // ── Step 2 — Booking form ─────────────────────────────────────────────────────
 
-const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
+const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
   const { t } = useLanguage();
   const [months,     setMonths]     = useState(1);
   const [bloodGroup, setBloodGroup] = useState('');
@@ -254,6 +254,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
   const [errors,     setErrors]     = useState({});
+  const [isLoading,  setIsLoading]  = useState(false);
 
   const total       = calculatePlanTotal(plan.monthlyRate, months);
   const full        = plan.monthlyRate * months;
@@ -262,7 +263,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
 
   const clear = (key) => setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!name.trim() || name.trim().length > NAME_MAX) errs.name = t('bookingModal.errors.name');
@@ -273,24 +274,44 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
     if (!birthdate)  errs.birthdate  = t('bookingModal.errors.birthdate');
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    const fmt = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}/${y}`; };
-    
-    // Always sent in French as agreed
-    const lines = [
-      "Bonjour 👋, je souhaite m'inscrire chez Équinox Sports Club.",
-      '',
-      `Nom: ${name}`,
-      `Téléphone: ${phone}`,
-      `Groupe sanguin: ${bloodGroup}`,
-      `Date de naissance: ${fmt(birthdate)}`,
-      `Formule: ${plan.name || plan.catKey} – ${plan.frequency}`,
-      `Espace: ${gender}`,
-      `Durée: ${months} mois`,
-      `Total: ${formatDA(total)}`,
-      ...(show12Perk ? ['Bonus: T-shirt et Shaker offerts 🎁'] : []),
-    ];
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer');
-    onSubmit();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formData: {
+            fullName: name,
+            phone: phone,
+            gender: gender,
+          },
+          planData: {
+            name: plan.name || plan.catKey,
+            frequency: plan.frequency,
+            sessions: plan.sessions || '-',
+            monthlyRate: total
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to book. Please try again.');
+      }
+
+      const data = await response.json();
+      
+      if (data.type === 'stripe' && data.url) {
+        window.location.href = data.url;
+      } else {
+        onSubmit();
+      }
+    } catch (err) {
+      console.error(err);
+      setErrors({ form: 'An error occurred. Please try again later.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -431,35 +452,92 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
       </div>
 
       {/* Submit / success */}
+      {errors.form && (
+        <div style={{ color: '#e07070', fontSize: '14px', textAlign: 'center', fontWeight: 500 }}>
+          {errors.form}
+        </div>
+      )}
+      
       {submitted ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           style={{
-            padding: '1.25rem', textAlign: 'center',
-            background: 'rgba(var(--theme-rgb), 0.08)', border: '1px solid rgba(var(--theme-rgb), 0.35)',
-            borderRadius: '12px', color: 'var(--theme-primary)', fontSize: '15px', fontWeight: 600, lineHeight: 1.5,
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(var(--theme-rgb), 0.35)',
+            borderRadius: '16px', overflow: 'hidden'
           }}
         >
-          ✓ {t('bookingModal.successText')}
-          <br />
-          <span style={{ fontSize: '13px', color: '#9A948A', fontWeight: 400 }}>
-            {t('bookingModal.successSub')}
-          </span>
+          {/* Receipt Header */}
+          <div style={{ background: 'rgba(var(--theme-rgb), 0.1)', padding: '1.25rem', textAlign: 'center', borderBottom: '1px solid rgba(var(--theme-rgb), 0.2)' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%', background: 'var(--theme-primary)', color: '#000',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem', fontWeight: 'bold'
+            }}>✓</div>
+            <h3 style={{ color: 'var(--theme-primary)', margin: 0, fontSize: '1.25rem', fontFamily: 'var(--font-heading)' }}>Réservation Confirmée</h3>
+            <p style={{ color: '#9A948A', fontSize: '12px', margin: '0.2rem 0 0' }}>Vos informations ont été transmises avec succès.</p>
+          </div>
+          
+          {/* Receipt Details */}
+          <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: '#9A948A' }}>Nom</span>
+              <span style={{ color: '#F4F4F5', fontWeight: 600 }}>{name}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: '#9A948A' }}>Téléphone</span>
+              <span style={{ color: '#F4F4F5', fontWeight: 600 }}>{phone}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: '#9A948A' }}>Formule</span>
+              <span style={{ color: '#F4F4F5', fontWeight: 600 }}>{plan.name || plan.catKey}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: '#9A948A' }}>Durée</span>
+              <span style={{ color: '#F4F4F5', fontWeight: 600 }}>{months} {months === 1 ? 'mois' : 'mois'}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span style={{ color: '#9A948A' }}>Espace</span>
+              <span style={{ color: '#F4F4F5', fontWeight: 600 }}>{gender}</span>
+            </div>
+
+            {saved > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                <span style={{ color: '#10b981' }}>Économie</span>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>-{formatDA(saved)}</span>
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(var(--theme-rgb), 0.2)' }}>
+              <span style={{ color: '#F4F4F5', fontWeight: 700 }}>Total à Payer</span>
+              <span style={{ color: 'var(--theme-primary)', fontWeight: 900 }}>{formatDA(total)}</span>
+            </div>
+
+            <button type="button" onClick={onClose} style={{
+              width: '100%', padding: '0.85rem', marginTop: '1rem',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '50px', color: '#F4F4F5', fontWeight: 700, cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+            >
+              Fermer
+            </button>
+          </div>
         </motion.div>
       ) : (
-        <button type="submit" style={{
+        <button type="submit" disabled={isLoading} style={{
           width: '100%', padding: '1rem 1.5rem',
           background: 'var(--theme-primary)', border: 'none', borderRadius: '50px',
-          color: '#0A0A0A', fontWeight: 800, fontSize: '1rem', cursor: 'pointer',
+          color: '#0A0A0A', fontWeight: 800, fontSize: '1rem', cursor: isLoading ? 'wait' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
           transition: 'background 0.2s, transform 0.15s',
+          opacity: isLoading ? 0.7 : 1
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--theme-light)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--theme-primary)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+          onMouseEnter={(e) => { if (!isLoading) { e.currentTarget.style.background = 'var(--theme-light)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={(e) => { if (!isLoading) { e.currentTarget.style.background = 'var(--theme-primary)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
         >
-          <WAIcon />
-          {t('bookingModal.confirmBtn')}
+          {isLoading ? 'Traitement en cours...' : 'Confirmer la Réservation'}
         </button>
       )}
     </form>
@@ -650,7 +728,7 @@ const BookingModal = ({ plan: initialPlan = null, onClose }) => {
               initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 18 }} transition={{ duration: 0.22 }}
             >
-              <BookingForm plan={plan} gender={gender} onSubmit={() => setSubmitted(true)} submitted={submitted} />
+              <BookingForm plan={plan} gender={gender} onSubmit={() => setSubmitted(true)} submitted={submitted} onClose={onClose} />
             </motion.div>
           )}
         </AnimatePresence>

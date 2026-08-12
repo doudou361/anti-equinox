@@ -11,9 +11,7 @@ const Footer = ({ onContactClick }) => {
       marginTop: 'auto',
       borderTop: '1px solid rgba(212, 175, 55, 0.1)'
     }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
+      <div className="container" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
         gap: '3rem'

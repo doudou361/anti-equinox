@@ -68,10 +68,10 @@ const TeamSection = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="team" style={{ padding: '6rem 2rem', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
-        {/* Intro */}
+    <section id="team" style={{ padding: '6rem 0', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="container">
+
+        {/* Intro Title */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -79,35 +79,9 @@ const TeamSection = () => {
           transition={{ duration: 0.6 }}
           style={{ textAlign: 'center', marginBottom: '4rem' }}
         >
-          <p style={{ color: 'var(--gold-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            L'Équipe Équinox
-          </p>
-          <h2 style={{ fontSize: '2.5rem', color: '#F4F4F5', marginBottom: '1.5rem', fontFamily: 'var(--font-heading)', maxWidth: '800px', margin: '0 auto 1.5rem', lineHeight: 1.3 }}>
-            Chez Équinox, la force d'une salle ne se mesure pas qu'à son équipement — mais à ceux qui vous accompagnent.
+          <h2 style={{ fontSize: '3rem', color: '#F4F4F5', margin: '0 auto', fontFamily: 'var(--font-heading)' }}>
+            Nos Coachs
           </h2>
-        </motion.div>
-
-        {/* Features Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '2rem', 
-            marginBottom: '5rem',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.05)',
-            borderRadius: '16px',
-            padding: '3rem 2rem'
-          }}
-        >
-          <FeatureItem icon={Activity} title="Suivi continu" />
-          <FeatureItem icon={Target} title="Correction technique" />
-          <FeatureItem icon={Utensils} title="Conseils nutrition" />
-          <FeatureItem icon={Zap} title="Motivation" />
         </motion.div>
 
         {/* Coaches */}
