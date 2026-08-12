@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BookingModal from './BookingModal';
 import { LanguageProvider } from '../context/LanguageContext';
@@ -11,6 +11,10 @@ const bm = fr.bookingModal;
 const errs = bm.errors;
 
 const PLAN = { catKey: 'muscCT', frequency: '3x Semaine', monthlyRate: 3500 };
+
+// The submit and receipt labels are hardcoded French, not translation keys.
+const CONFIRM_BTN = 'Confirmer la Réservation';
+const RECEIPT_TITLE = 'Réservation Confirmée';
 
 const renderModal = ({ onClose = vi.fn(), plan = null } = {}) =>
   render(
@@ -45,17 +49,24 @@ const fillValidForm = async (user) => {
   await user.type(birthdateInput(), '1995-04-09');
 };
 
-const sentMessage = (openSpy) =>
-  decodeURIComponent(openSpy.mock.calls[0][0].split('?text=')[1]);
+/** Body of the booking request the form POSTs to /api/book. */
+const bookingPayload = () => JSON.parse(fetchSpy.mock.calls[0][1].body);
 
 let openSpy;
+let fetchSpy;
+
+const mockBooking = (body = { success: true, type: 'simulated' }, ok = true) => {
+  fetchSpy.mockResolvedValue({ ok, json: async () => body });
+};
 
 beforeEach(() => {
   openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  fetchSpy = vi.spyOn(globalThis, 'fetch');
+  mockBooking();
 });
 
 afterEach(() => {
-  openSpy.mockRestore();
+  vi.restoreAllMocks();
 });
 
 describe('BookingModal step flow', () => {
@@ -159,17 +170,17 @@ describe('BookingModal pricing', () => {
 });
 
 describe('BookingModal form validation', () => {
-  it('reports every missing field and does not open WhatsApp', async () => {
+  it('reports every missing field and books nothing', async () => {
     const user = userEvent.setup();
     renderModal({ plan: PLAN });
     await chooseSpace(user);
-    await user.click(await screen.findByRole('button', { name: bm.confirmBtn }));
+    await user.click(await screen.findByRole('button', { name: CONFIRM_BTN }));
 
     expect(screen.getByText(errs.name)).toBeInTheDocument();
     expect(screen.getByText(errs.phoneReq)).toBeInTheDocument();
     expect(screen.getByText(errs.bloodGroup)).toBeInTheDocument();
     expect(screen.getByText(errs.birthdate)).toBeInTheDocument();
-    expect(openSpy).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('rejects a phone number with fewer than nine digits', async () => {
@@ -179,10 +190,10 @@ describe('BookingModal form validation', () => {
     await screen.findByText(bm.duration);
     await user.type(nameInput(), 'Yacine B');
     await user.type(phoneInput(), '05 61 23');
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
 
     expect(screen.getByText(errs.phoneInv)).toBeInTheDocument();
-    expect(openSpy).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('rejects a whitespace-only name', async () => {
@@ -191,7 +202,7 @@ describe('BookingModal form validation', () => {
     await chooseSpace(user);
     await screen.findByText(bm.duration);
     await user.type(nameInput(), '   ');
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
     expect(screen.getByText(errs.name)).toBeInTheDocument();
   });
 
@@ -199,7 +210,7 @@ describe('BookingModal form validation', () => {
     const user = userEvent.setup();
     renderModal({ plan: PLAN });
     await chooseSpace(user);
-    await user.click(await screen.findByRole('button', { name: bm.confirmBtn }));
+    await user.click(await screen.findByRole('button', { name: CONFIRM_BTN }));
     expect(screen.getByText(errs.name)).toBeInTheDocument();
 
     await user.type(nameInput(), 'Y');
@@ -212,39 +223,43 @@ describe('BookingModal form validation', () => {
 });
 
 describe('BookingModal submission', () => {
-  it('sends a French WhatsApp message with the booking details', async () => {
+  it('posts the booking to /api/book with the priced plan', async () => {
     const user = userEvent.setup();
     renderModal({ plan: PLAN });
     await chooseSpace(user);
     await screen.findByText(bm.duration);
     await fillValidForm(user);
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
 
-    expect(openSpy).toHaveBeenCalledTimes(1);
-    expect(openSpy.mock.calls[0][1]).toBe('_blank');
-    const message = sentMessage(openSpy);
-    expect(message).toContain('Nom: Yacine B');
-    expect(message).toContain('Téléphone: 0561234567');
-    expect(message).toContain('Groupe sanguin: O+');
-    expect(message).toContain('Date de naissance: 09/04/1995');
-    expect(message).toContain('Espace: Homme');
-    expect(message).toContain('Durée: 1 mois');
-    expect(message).toContain(`Total: ${formatDA(PLAN.monthlyRate)}`);
-    expect(message).not.toContain('Bonus');
+    await screen.findByText(RECEIPT_TITLE);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('/api/book');
+    expect(init.method).toBe('POST');
+    expect(init.headers['Content-Type']).toBe('application/json');
+    expect(bookingPayload()).toEqual({
+      formData: { fullName: 'Yacine B', phone: '0561234567', gender: 'Homme' },
+      planData: {
+        name: PLAN.catKey,
+        frequency: PLAN.frequency,
+        sessions: '-',
+        monthlyRate: PLAN.monthlyRate,
+      },
+    });
   });
 
-  it('adds the yearly bonus line and the discounted total', async () => {
+  it('bills the discounted multi-month total, not the monthly rate', async () => {
     const user = userEvent.setup();
     renderModal({ plan: PLAN });
     await chooseSpace(user);
     await user.click(await screen.findByRole('button', { name: `12 ${bm.months}` }));
     await fillValidForm(user);
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
 
-    const message = sentMessage(openSpy);
-    expect(message).toContain('Durée: 12 mois');
-    expect(message).toContain(`Total: ${formatDA(calculatePlanTotal(PLAN.monthlyRate, 12))}`);
-    expect(message).toContain('Bonus: T-shirt et Shaker offerts 🎁');
+    await screen.findByText(RECEIPT_TITLE);
+    expect(bookingPayload().planData.monthlyRate).toBe(
+      calculatePlanTotal(PLAN.monthlyRate, 12),
+    );
   });
 
   it('records the women space when that option is chosen', async () => {
@@ -253,20 +268,85 @@ describe('BookingModal submission', () => {
     await chooseSpace(user, bm.womenCard);
     await screen.findByText(bm.duration);
     await fillValidForm(user);
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
 
-    expect(sentMessage(openSpy)).toContain('Espace: Femme');
+    await screen.findByText(RECEIPT_TITLE);
+    expect(bookingPayload().formData.gender).toBe('Femme');
   });
 
-  it('confirms success instead of the submit button after sending', async () => {
+  it('replaces the form with a receipt recapping the booking', async () => {
+    const user = userEvent.setup();
+    renderModal({ plan: PLAN });
+    await chooseSpace(user);
+    await screen.findByText(bm.duration);
+    await user.click(btn(`6 ${bm.months}`));
+    await fillValidForm(user);
+    await user.click(btn(CONFIRM_BTN));
+
+    expect(await screen.findByText(RECEIPT_TITLE)).toBeInTheDocument();
+    expect(screen.getByText('Yacine B')).toBeInTheDocument();
+    expect(screen.getByText('0561234567')).toBeInTheDocument();
+    expect(screen.getByText('Homme')).toBeInTheDocument();
+    expect(screen.getByText('6 mois')).toBeInTheDocument();
+    expect(
+      screen.getAllByText(money(calculatePlanTotal(PLAN.monthlyRate, 6))),
+    ).not.toHaveLength(0);
+    expect(screen.queryByRole('button', { name: CONFIRM_BTN })).not.toBeInTheDocument();
+  });
+
+  it('closes from the receipt', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    renderModal({ plan: PLAN, onClose });
+    await chooseSpace(user);
+    await screen.findByText(bm.duration);
+    await fillValidForm(user);
+    await user.click(btn(CONFIRM_BTN));
+
+    const receipt = (await screen.findByText(RECEIPT_TITLE)).closest('div[style]')
+      .parentElement;
+    await user.click(within(receipt).getByRole('button', { name: 'Fermer' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the form and shows an error when the booking request fails', async () => {
+    mockBooking({ error: 'boom' }, false);
     const user = userEvent.setup();
     renderModal({ plan: PLAN });
     await chooseSpace(user);
     await screen.findByText(bm.duration);
     await fillValidForm(user);
-    await user.click(btn(bm.confirmBtn));
+    await user.click(btn(CONFIRM_BTN));
 
-    expect(await screen.findByText(new RegExp(bm.successText))).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: bm.confirmBtn })).not.toBeInTheDocument();
+    expect(
+      await screen.findByText('An error occurred. Please try again later.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: CONFIRM_BTN })).toBeEnabled();
+    expect(screen.queryByText(RECEIPT_TITLE)).not.toBeInTheDocument();
+  });
+
+  it('hands off to Stripe checkout when the API returns a payment url', async () => {
+    mockBooking({ type: 'stripe', url: 'https://checkout.stripe.com/c/pay/abc' });
+    const assign = vi.fn();
+    vi.spyOn(window, 'location', 'get').mockReturnValue({
+      get href() {
+        return 'http://localhost/';
+      },
+      set href(value) {
+        assign(value);
+      },
+    });
+
+    const user = userEvent.setup();
+    renderModal({ plan: PLAN });
+    await chooseSpace(user);
+    await screen.findByText(bm.duration);
+    await fillValidForm(user);
+    await user.click(btn(CONFIRM_BTN));
+
+    await vi.waitFor(() =>
+      expect(assign).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/abc'),
+    );
+    expect(screen.queryByText(RECEIPT_TITLE)).not.toBeInTheDocument();
   });
 });
