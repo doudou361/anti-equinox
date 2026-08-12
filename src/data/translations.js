@@ -209,7 +209,8 @@ export const translations = {
         phoneInv: "Numéro invalide (9 chiffres minimum).",
         bloodGroup: "Veuillez sélectionner votre groupe sanguin.",
         birthdate: "La date de naissance est requise.",
-        birthdateInv: "Date de naissance invalide."
+        birthdateInv: "Date de naissance invalide.",
+        submitFailed: "L'envoi de la réservation a échoué. Veuillez réessayer."
       },
       successText: "Message envoyé sur WhatsApp.",
       successSub: "Nous vous contacterons très bientôt.",
@@ -432,7 +433,8 @@ export const translations = {
         phoneInv: "Invalid number (min 9 digits).",
         bloodGroup: "Please select your blood group.",
         birthdate: "Date of birth is required.",
-        birthdateInv: "Invalid date of birth."
+        birthdateInv: "Invalid date of birth.",
+        submitFailed: "Sending your booking failed. Please try again."
       },
       successText: "Message sent on WhatsApp.",
       successSub: "We will contact you very soon.",

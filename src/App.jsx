@@ -16,7 +16,13 @@ import NutritionPage from './pages/Nutrition'
 import './App.css'
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'nutrition'
+  // 'home' | 'nutrition' | 'success' | 'cancel'
+  const [currentView, setCurrentView] = useState(() => {
+    const path = window.location.pathname;
+    if (path === '/success') return 'success';
+    if (path === '/cancel') return 'cancel';
+    return 'home';
+  });
 
   // ── Booking modal (used by Hero, Navbar, and Pricing rows) ────────────────
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -56,6 +62,7 @@ function AppContent() {
   };
 
   const goHome = () => {
+    window.history.pushState({}, '', '/');
     setCurrentView('home');
     window.scrollTo(0, 0);
   };
@@ -81,6 +88,28 @@ function AppContent() {
           <NutritionPage onHomeClick={goHome} />
           <Footer onContactClick={openContactModal} />
         </>
+      ) : currentView === 'success' ? (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+          <div style={{ background: 'rgba(197,160,89,0.1)', padding: '2rem', borderRadius: '50%', marginBottom: '2rem', color: '#C5A059' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h1 style={{ fontSize: '3rem', color: '#F4F4F5', fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>Paiement Réussi !</h1>
+          <p style={{ color: '#9A948A', fontSize: '1.2rem', maxWidth: '600px', marginBottom: '3rem' }}>
+            Merci pour votre réservation. Votre paiement a été confirmé et votre place est réservée.
+          </p>
+          <button onClick={goHome} className="btn-primary">Retour à l'accueil</button>
+        </div>
+      ) : currentView === 'cancel' ? (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+          <div style={{ background: 'rgba(224,85,85,0.1)', padding: '2rem', borderRadius: '50%', marginBottom: '2rem', color: '#e05555' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </div>
+          <h1 style={{ fontSize: '3rem', color: '#F4F4F5', fontFamily: 'var(--font-heading)', marginBottom: '1rem' }}>Paiement Annulé</h1>
+          <p style={{ color: '#9A948A', fontSize: '1.2rem', maxWidth: '600px', marginBottom: '3rem' }}>
+            Votre paiement n'a pas été finalisé. Vous pouvez réessayer quand vous le souhaitez.
+          </p>
+          <button onClick={goHome} className="btn-primary">Retour à l'accueil</button>
+        </div>
       ) : (
         <>
           <Navbar {...sharedNavProps} />
@@ -89,7 +118,6 @@ function AppContent() {
             <Schedule />
             {/* Pricing passes specific plan → modal skips picker, goes straight to form */}
             <Pricing onPlanBook={openBookingModal} onCrossfitClick={openCrossfitModal} />
-            {/* <Products onContactClick={openContactModal} /> */}
             <TeamSection />
             <Gallery />
           </main>
