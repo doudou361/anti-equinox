@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown } from 'lucide-react';
-import { pricingCategories } from '../data/pricing';
 import { useLanguage } from '../context/LanguageContext';
-import { formatDA } from '../lib/pricing';
+import { formatDA, getPricingCategory } from '../lib/pricing';
+import { openExternalUrl, buildWhatsAppUrl } from '../lib/openExternal';
+import WhatsAppBlockedNotice from './WhatsAppBlockedNotice';
 
 // ── Séance Libre — direct WhatsApp (not a subscription, no duration picker) ──
 
-const SL_WA_URL =
-  'https://wa.me/213562838455?text=' +
-  encodeURIComponent(
-    'Bonjour 👋, je souhaite réserver une Séance Libre (500 DA) à Équinox Sports Club.'
-  );
+const SL_WA_URL = buildWhatsAppUrl(
+  '213562838455',
+  'Bonjour 👋, je souhaite réserver une Séance Libre (500 DA) à Équinox Sports Club.'
+);
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ const PlanRow = ({ catName, plan, onBook, index, t }) => (
 
 // ── Category section card ─────────────────────────────────────────────────────
 
-const CategoryCard = ({ cat, icon, onBook, delay = 0, t }) => {
+const CategoryCard = ({ cat, icon, onBook, onCrossfitClick, delay = 0, t }) => {
   const catIdToKey = {
     musculation_cross_training: 'muscCT',
     musculation_avec_crossfit: 'muscCF',
@@ -138,9 +138,9 @@ const CategoryCard = ({ cat, icon, onBook, delay = 0, t }) => {
       ))}
     </div>
     
-    {cat.id === 'musculation_avec_crossfit' && (
+    {cat.id === 'musculation_avec_crossfit' && onCrossfitClick && (
       <button
-        onClick={() => document.getElementById('btn-crossfit-schedule')?.click()}
+        onClick={onCrossfitClick}
         style={{
           marginTop: '0.5rem', background: 'transparent',
           border: '1px solid rgba(197,160,89,0.3)', color: '#C5A059',
@@ -159,13 +159,14 @@ const CategoryCard = ({ cat, icon, onBook, delay = 0, t }) => {
 
 // ── Main Pricing component ────────────────────────────────────────────────────
 
-const Pricing = ({ onPlanBook }) => {
-  const { lang, t } = useLanguage();
+const Pricing = ({ onPlanBook, onCrossfitClick }) => {
+  const { lang, t, tList } = useLanguage();
+  const [waBlocked, setWaBlocked] = useState(false);
 
-  const muscCT  = pricingCategories.find((c) => c.id === 'musculation_cross_training');
-  const muscCF  = pricingCategories.find((c) => c.id === 'musculation_avec_crossfit');
-  const vip     = pricingCategories.find((c) => c.id === 'pack_vip');
-  const libre   = pricingCategories.find((c) => c.id === 'seance_libre');
+  const muscCT  = getPricingCategory('musculation_cross_training');
+  const muscCF  = getPricingCategory('musculation_avec_crossfit');
+  const vip     = getPricingCategory('pack_vip');
+  const libre   = getPricingCategory('seance_libre');
 
   const openModal = (catName, plan) =>
     onPlanBook({ name: catName, frequency: plan.frequency, monthlyRate: plan.monthlyRate });
@@ -194,7 +195,7 @@ const Pricing = ({ onPlanBook }) => {
           {/* Row 1 — two category cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
             <CategoryCard cat={muscCT} icon={<DumbbellIcon />} onBook={openModal} delay={0} t={t} />
-            <CategoryCard cat={muscCF} icon={<DumbbellIcon />} onBook={openModal} delay={0.1} t={t} />
+            <CategoryCard cat={muscCF} icon={<DumbbellIcon />} onBook={openModal} onCrossfitClick={onCrossfitClick} delay={0.1} t={t} />
           </div>
 
           {/* Row 2 — VIP + Séance Libre */}
@@ -238,7 +239,7 @@ const Pricing = ({ onPlanBook }) => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {Object.values(t('pricing.benefits', { returnObjects: true })).map((b, i) => (
+                {tList('pricing.benefits').map((b, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '14px', color: '#F4F4F5' }}>
                     <span style={{ color: '#C5A059', fontWeight: 700, flexShrink: 0 }}>✓</span>
                     {b}
@@ -288,7 +289,7 @@ const Pricing = ({ onPlanBook }) => {
 
               <button
                 className="btn-glow"
-                onClick={() => window.open(SL_WA_URL, '_blank')}
+                onClick={() => setWaBlocked(!openExternalUrl(SL_WA_URL))}
                 style={{
                   width: '100%', padding: '0.9rem', fontSize: '1rem', borderRadius: '8px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
@@ -297,6 +298,8 @@ const Pricing = ({ onPlanBook }) => {
                 <WAIcon />
                 {t('pricing.bookSession')}
               </button>
+
+              {waBlocked && <WhatsAppBlockedNotice url={SL_WA_URL} />}
             </motion.div>
 
           </div>

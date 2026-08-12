@@ -88,7 +88,7 @@ function AppContent() {
             <Hero onBookClick={openBookingModal} />
             <Schedule />
             {/* Pricing passes specific plan → modal skips picker, goes straight to form */}
-            <Pricing onPlanBook={openBookingModal} />
+            <Pricing onPlanBook={openBookingModal} onCrossfitClick={openCrossfitModal} />
             {/* <Products onContactClick={openContactModal} /> */}
             <TeamSection />
             <Gallery />

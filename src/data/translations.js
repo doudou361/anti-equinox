@@ -1,5 +1,10 @@
 export const translations = {
   fr: {
+    // Shared strings
+    common: {
+      waBlocked: "Votre navigateur a bloqué l'ouverture de WhatsApp. Votre message n'a pas été envoyé.",
+      waBlockedLink: "Ouvrir WhatsApp manuellement"
+    },
     // Navbar
     nav: {
       schedule: "Horaires",
@@ -143,6 +148,12 @@ export const translations = {
       phonePlaceholder: "Votre Numéro de Téléphone",
       messagePlaceholder: "Comment pouvons-nous vous aider ?",
       sendBtn: "ENVOYER LE MESSAGE",
+      errors: {
+        name: "Le nom complet est requis.",
+        phoneReq: "Le numéro est requis.",
+        phoneInv: "Numéro invalide (9 chiffres minimum).",
+        messageReq: "Le message est requis."
+      },
       sentSuccess: "Message envoyé avec succès ! Nous vous recontacterons très vite.",
       followUs: "Suivez-nous sur les réseaux"
     },
@@ -197,7 +208,8 @@ export const translations = {
         phoneReq: "Le numéro est requis.",
         phoneInv: "Numéro invalide (9 chiffres minimum).",
         bloodGroup: "Veuillez sélectionner votre groupe sanguin.",
-        birthdate: "La date de naissance est requise."
+        birthdate: "La date de naissance est requise.",
+        birthdateInv: "Date de naissance invalide."
       },
       successText: "Message envoyé sur WhatsApp.",
       successSub: "Nous vous contacterons très bientôt.",
@@ -211,6 +223,11 @@ export const translations = {
     }
   },
   en: {
+    // Shared strings
+    common: {
+      waBlocked: "Your browser blocked WhatsApp from opening. Your message was not sent.",
+      waBlockedLink: "Open WhatsApp manually"
+    },
     // Navbar
     nav: {
       schedule: "Schedule",
@@ -354,6 +371,12 @@ export const translations = {
       phonePlaceholder: "Your Phone Number",
       messagePlaceholder: "How can we help you?",
       sendBtn: "SEND MESSAGE",
+      errors: {
+        name: "Full name is required.",
+        phoneReq: "Phone number is required.",
+        phoneInv: "Invalid number (min 9 digits).",
+        messageReq: "A message is required."
+      },
       sentSuccess: "Message sent successfully! We will get back to you shortly.",
       followUs: "Follow us on social media"
     },
@@ -408,7 +431,8 @@ export const translations = {
         phoneReq: "Phone number is required.",
         phoneInv: "Invalid number (min 9 digits).",
         bloodGroup: "Please select your blood group.",
-        birthdate: "Date of birth is required."
+        birthdate: "Date of birth is required.",
+        birthdateInv: "Invalid date of birth."
       },
       successText: "Message sent on WhatsApp.",
       successSub: "We will contact you very soon.",

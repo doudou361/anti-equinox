@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { openExternalUrl, buildWhatsAppUrl } from '../lib/openExternal';
+import WhatsAppBlockedNotice from './WhatsAppBlockedNotice';
+
+const WA_NUMBER = '213562838455';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -111,6 +115,7 @@ const ProductModal = ({ product, onClose }) => {
   const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
+  const [waUrl, setWaUrl] = useState(null);
 
   if (!product) return null;
 
@@ -130,8 +135,13 @@ const ProductModal = ({ product, onClose }) => {
       ? `Bonjour 👋, je m'appelle ${name} et je suis intéressé(e) par ${product.name} à ${product.price} DA. Mon numéro: ${phone}`
       : `Bonjour 👋, je m'appelle ${name} et je suis intéressé(e) par ${product.name}. Mon numéro: ${phone}`;
 
-    const url = `https://wa.me/213562838455?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const url = buildWhatsAppUrl(WA_NUMBER, text);
+    if (!openExternalUrl(url)) {
+      // The request never left the browser — do not claim it was sent.
+      setWaUrl(url);
+      return;
+    }
+    setWaUrl(null);
     setSent(true);
   };
 
@@ -344,6 +354,8 @@ const ProductModal = ({ product, onClose }) => {
                   style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
                   noValidate
                 >
+                  {waUrl && <WhatsAppBlockedNotice url={waUrl} />}
+
                   <Field
                     label="Nom complet"
                     type="text"

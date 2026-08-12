@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, Crown, ArrowLeft, User, Users } from 'lucide-react';
-import { calculatePlanTotal, getSavingsInfo, formatDA } from '../lib/pricing';
-import { pricingCategories } from '../data/pricing';
+import { calculatePlanTotal, getSavingsInfo, formatDA, getPricingCategory } from '../lib/pricing';
 import { useLanguage } from '../context/LanguageContext';
+import { openExternalUrl, buildWhatsAppUrl } from '../lib/openExternal';
+import WhatsAppBlockedNotice from './WhatsAppBlockedNotice';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -11,9 +12,19 @@ const BLOOD_GROUPS = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 const DURATIONS    = [1, 3, 6, 12];
 const WA_NUMBER    = '213562838455';
 
-const SL_WA_URL =
-  'https://wa.me/' + WA_NUMBER + '?text=' +
-  encodeURIComponent('Bonjour 👋, je souhaite réserver une Séance Libre (500 DA) à Équinox Sports Club.');
+const SL_WA_URL = buildWhatsAppUrl(
+  WA_NUMBER,
+  'Bonjour 👋, je souhaite réserver une Séance Libre (500 DA) à Équinox Sports Club.'
+);
+
+/** Convert an <input type="date"> value (YYYY-MM-DD) to DD/MM/YYYY, or null. */
+const formatBirthdate = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  if (Number.isNaN(new Date(`${value}T00:00:00`).getTime())) return null;
+  return `${day}/${month}/${year}`;
+};
 
 // ── Shared icons ──────────────────────────────────────────────────────────────
 
@@ -168,9 +179,10 @@ const PlanPickerRow = ({ catKey, plan, special, onSelect, t }) => (
 
 const PlanPicker = ({ onSelect }) => {
   const { t } = useLanguage();
-  const muscCT = pricingCategories.find((c) => c.id === 'musculation_cross_training');
-  const muscCF = pricingCategories.find((c) => c.id === 'musculation_avec_crossfit');
-  const vip    = pricingCategories.find((c) => c.id === 'pack_vip');
+  const [waBlocked, setWaBlocked] = useState(false);
+  const muscCT = getPricingCategory('musculation_cross_training');
+  const muscCF = getPricingCategory('musculation_avec_crossfit');
+  const vip    = getPricingCategory('pack_vip');
 
   return (
     <div style={{ padding: '0.25rem 1.5rem 1.5rem' }}>
@@ -201,8 +213,13 @@ const PlanPicker = ({ onSelect }) => {
           <span style={{ fontSize: '11px', color: '#9A948A' }}>{t('pricing.sessions.Accès unitaire — sans engagement')}</span>
         </div>
         <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--theme-primary)', whiteSpace: 'nowrap' }}>500 DA</span>
-        <ChooseBtn onClick={() => window.open(SL_WA_URL, '_blank')} label={t('bookingModal.waBtn')} isWA />
+        <ChooseBtn onClick={() => setWaBlocked(!openExternalUrl(SL_WA_URL))} label={t('bookingModal.waBtn')} isWA />
       </div>
+      {waBlocked && (
+        <div style={{ marginTop: '0.6rem' }}>
+          <WhatsAppBlockedNotice url={SL_WA_URL} />
+        </div>
+      )}
     </div>
   );
 };
@@ -251,6 +268,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
   const [errors,     setErrors]     = useState({});
+  const [waUrl,      setWaUrl]      = useState(null);
 
   const total       = calculatePlanTotal(plan.monthlyRate, months);
   const full        = plan.monthlyRate * months;
@@ -268,10 +286,11 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
     else if (digits.length < 9) errs.phone = t('bookingModal.errors.phoneInv');
     if (!bloodGroup) errs.bloodGroup = t('bookingModal.errors.bloodGroup');
     if (!birthdate)  errs.birthdate  = t('bookingModal.errors.birthdate');
+    const formattedBirthdate = birthdate ? formatBirthdate(birthdate) : null;
+    if (birthdate && !formattedBirthdate) errs.birthdate = t('bookingModal.errors.birthdateInv');
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
 
-    const fmt = (d) => { const [y, m, day] = d.split('-'); return `${day}/${m}/${y}`; };
-    
     // Always sent in French as agreed
     const lines = [
       "Bonjour 👋, je souhaite m'inscrire chez Équinox Sports Club.",
@@ -279,14 +298,19 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
       `Nom: ${name}`,
       `Téléphone: ${phone}`,
       `Groupe sanguin: ${bloodGroup}`,
-      `Date de naissance: ${fmt(birthdate)}`,
+      `Date de naissance: ${formattedBirthdate}`,
       `Formule: ${plan.name || plan.catKey} – ${plan.frequency}`,
       `Espace: ${gender}`,
       `Durée: ${months} mois`,
       `Total: ${formatDA(total)}`,
       ...(show12Perk ? ['Bonus: T-shirt et Shaker offerts 🎁'] : []),
     ];
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+    const url = buildWhatsAppUrl(WA_NUMBER, lines.join('\n'));
+    if (!openExternalUrl(url)) {
+      setWaUrl(url);
+      return;
+    }
+    setWaUrl(null);
     onSubmit();
   };
 
@@ -426,6 +450,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted }) => {
           {t('bookingModal.cinEnd')}
         </p>
       </div>
+
+      {waUrl && <WhatsAppBlockedNotice url={waUrl} />}
 
       {/* Submit / success */}
       {submitted ? (

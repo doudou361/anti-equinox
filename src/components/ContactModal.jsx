@@ -1,16 +1,46 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { openExternalUrl, buildWhatsAppUrl } from '../lib/openExternal';
+import WhatsAppBlockedNotice from './WhatsAppBlockedNotice';
+
+const WA_NUMBER = '213562838455';
 
 const ContactModal = ({ isOpen, onClose }) => {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [waUrl, setWaUrl] = useState(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const errs = {};
+    if (!formData.name.trim()) errs.name = t('contactModal.errors.name');
+    const digits = formData.phone.replace(/\D/g, '');
+    if (!formData.phone.trim())  errs.phone = t('contactModal.errors.phoneReq');
+    else if (digits.length < 9) errs.phone = t('contactModal.errors.phoneInv');
+    if (!formData.message.trim()) errs.message = t('contactModal.errors.messageReq');
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
+
+    const url = buildWhatsAppUrl(WA_NUMBER, [
+      'Bonjour 👋, je vous contacte via le site Équinox Sports Club.',
+      '',
+      `Nom: ${formData.name}`,
+      `Téléphone: ${formData.phone}`,
+      `Message: ${formData.message}`,
+    ].join('\n'));
+
+    if (!openExternalUrl(url)) {
+      setWaUrl(url);
+      return;
+    }
+
+    setWaUrl(null);
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -18,6 +48,21 @@ const ContactModal = ({ isOpen, onClose }) => {
       onClose();
     }, 2500);
   };
+
+  const fieldStyle = (hasError) => ({
+    padding: '0.85rem 1rem',
+    background: 'rgba(0,0,0,0.4)',
+    border: `1px solid ${hasError ? '#e05555' : 'rgba(255,255,255,0.1)'}`,
+    borderRadius: '10px',
+    color: '#fff',
+    outline: 'none',
+    fontSize: '0.95rem'
+  });
+
+  const fieldError = (message) =>
+    message ? (
+      <span style={{ fontSize: '12px', color: '#e07070', fontWeight: 500 }}>{message}</span>
+    ) : null;
 
   return (
     <motion.div 
@@ -170,60 +215,37 @@ const ContactModal = ({ isOpen, onClose }) => {
                 ✓ {t('contactModal.sentSuccess')}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h4 style={{ color: 'var(--text-main)', margin: 0, fontSize: '1.1rem' }}>{t('contactModal.formTitle')}</h4>
-                
+
+                {waUrl && <WhatsAppBlockedNotice url={waUrl} />}
+
                 <input 
                   type="text" 
-                  required
                   placeholder={t('contactModal.namePlaceholder')}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '0.95rem'
-                  }}
+                  style={fieldStyle(errors.name)}
                 />
+                {fieldError(errors.name)}
 
                 <input 
                   type="tel" 
-                  required
                   placeholder={t('contactModal.phonePlaceholder')}
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  style={{
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '0.95rem'
-                  }}
+                  style={fieldStyle(errors.phone)}
                 />
+                {fieldError(errors.phone)}
 
                 <textarea 
                   rows="3"
-                  required
                   placeholder={t('contactModal.messagePlaceholder')}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  style={{
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px',
-                    color: '#fff',
-                    outline: 'none',
-                    fontSize: '0.95rem',
-                    resize: 'none'
-                  }}
+                  style={{ ...fieldStyle(errors.message), resize: 'none' }}
                 />
+                {fieldError(errors.message)}
 
                 <button type="submit" className="btn-glow" style={{ padding: '0.85rem', width: '100%', fontSize: '1rem' }}>
                   {t('contactModal.sendBtn')}

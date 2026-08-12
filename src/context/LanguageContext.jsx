@@ -3,6 +3,17 @@ import { translations } from '../data/translations';
 
 const LanguageContext = createContext();
 
+const warn = (message) => {
+  if (import.meta.env.DEV) console.warn(message);
+};
+
+/** Walk a dotted key path, returning undefined when any segment is missing. */
+const resolve = (bundle, keyPath) =>
+  keyPath.split('.').reduce(
+    (current, key) => (current && current[key] !== undefined ? current[key] : undefined),
+    bundle
+  );
+
 export const LanguageProvider = ({ children }) => {
   const [lang, setLang] = useState('fr'); // Default language is French
 
@@ -12,20 +23,29 @@ export const LanguageProvider = ({ children }) => {
 
   // Translation helper function t("nav.schedule")
   const t = (keyPath) => {
-    const keys = keyPath.split('.');
-    let current = translations[lang];
-    for (const key of keys) {
-      if (current && current[key] !== undefined) {
-        current = current[key];
-      } else {
-        return keyPath; // fallback to keyPath if missing
-      }
+    const value = resolve(translations[lang], keyPath);
+    if (value === undefined) {
+      warn(`Missing translation "${keyPath}" for language "${lang}"`);
+      return keyPath; // fallback to keyPath so the UI still renders
     }
-    return current;
+    return value;
+  };
+
+  /**
+   * Translation helper for keys holding a collection (object or array).
+   * Always returns an array so callers never crash on — or silently render
+   * nothing for — a missing or mistyped key.
+   */
+  const tList = (keyPath) => {
+    const value = resolve(translations[lang], keyPath);
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === 'object') return Object.values(value);
+    warn(`Translation "${keyPath}" for language "${lang}" is not a list (got ${typeof value})`);
+    return [];
   };
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ lang, setLang, toggleLanguage, t, tList }}>
       {children}
     </LanguageContext.Provider>
   );

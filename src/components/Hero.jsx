@@ -30,18 +30,35 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, [mediaPhase, IMAGES.length]);
 
-  // Handle video auto-play when switching back to video phase
+  // Handle video auto-play when switching back to video phase.
+  // When every video is refused (autoplay policy, decode error) the 'ended'
+  // event never fires, so fall through to the image carousel instead of
+  // leaving the hero frozen on a poster forever.
   useEffect(() => {
-    if (mediaPhase === 'video') {
-      if (desktopVideoRef.current) {
-        desktopVideoRef.current.currentTime = 0;
-        desktopVideoRef.current.play().catch(e => console.log('Auto-play prevented (desktop):', e));
-      }
-      if (mobileVideoRef.current) {
-        mobileVideoRef.current.currentTime = 0;
-        mobileVideoRef.current.play().catch(e => console.log('Auto-play prevented (mobile):', e));
-      }
-    }
+    if (mediaPhase !== 'video') return;
+
+    let cancelled = false;
+    const attempts = [
+      ['desktop', desktopVideoRef.current],
+      ['mobile', mobileVideoRef.current],
+    ].filter(([, video]) => video !== null);
+
+    if (attempts.length === 0) return;
+
+    const plays = attempts.map(([label, video]) => {
+      video.currentTime = 0;
+      return video.play().catch((error) => {
+        console.warn(`Hero video playback failed (${label}):`, error);
+        return false;
+      });
+    });
+
+    Promise.all(plays).then((results) => {
+      if (cancelled) return;
+      if (results.every((result) => result === false)) setMediaPhase(0);
+    });
+
+    return () => { cancelled = true; };
   }, [mediaPhase]);
 
   const handleVideoEnded = () => {

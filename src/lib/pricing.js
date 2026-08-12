@@ -5,6 +5,27 @@
  * every displayed price updates automatically.
  */
 
+import { pricingCategories } from '../data/pricing';
+
+/**
+ * Look up a pricing category by id.
+ * Throws with the offending id instead of handing back undefined, which the
+ * callers would only discover as a "cannot read properties of undefined" crash
+ * deep inside their JSX.
+ */
+export function getPricingCategory(id) {
+  const category = pricingCategories.find((c) => c.id === id);
+  if (!category) {
+    throw new Error(
+      `Unknown pricing category "${id}". Known ids: ${pricingCategories.map((c) => c.id).join(', ')}`
+    );
+  }
+  if (!Array.isArray(category.plans) || category.plans.length === 0) {
+    throw new Error(`Pricing category "${id}" has no plans defined.`);
+  }
+  return category;
+}
+
 /** Format a numeric DA amount in French locale (e.g. 25000 → "25 000 DA") */
 export const formatDA = (n) =>
   new Intl.NumberFormat('fr-FR').format(n) + ' DA';
