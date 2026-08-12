@@ -1,4 +1,3 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
 import Stripe from 'stripe';
 import { parseBooking, sheetSafe } from './_shared.js';
 
@@ -14,15 +13,8 @@ export default async function handler(req, res) {
   const booking = parsed.booking;
 
   try {
-    // Ensure we have Google credentials configured
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
-      console.warn("Missing Google Sheets credentials in environment variables. Simulating success for UI testing.");
-      
-      // Simulate network delay for realistic UI loading state
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      return res.status(200).json({ success: true, type: 'simulated' });
-    }
+    // In production, we don't need Google credentials here anymore since we use Apps Script webhook
+    // We just check APPS_SCRIPT_URL in the branch below.
 
     // Check if Stripe is configured
     const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -69,20 +61,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ url: session.url, type: 'stripe' });
 
     } else {
-      // ── DIRECT GOOGLE SHEETS PIPELINE (No Stripe) ──
-      const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
-      
-      await doc.useServiceAccountAuth({
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        // Fix newline issues in private keys passed via env vars
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      });
+      // ── DIRECT GOOGLE SHEETS PIPELINE (Via Apps Script) ──
+      const scriptUrl = process.env.APPS_SCRIPT_URL;
 
-      await doc.loadInfo();
-      const sheet = doc.sheetsByIndex[0]; // Assume first tab
+      if (!scriptUrl) {
+        console.warn("Missing APPS_SCRIPT_URL. Simulating success.");
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return res.status(200).json({ success: true, type: 'simulated' });
+      }
 
-      // Append row
-      await sheet.addRow({
+      const rowData = {
         Date: new Date().toLocaleDateString('fr-FR'),
         Nom: sheetSafe(booking.fullName),
         Téléphone: sheetSafe(booking.phone),
@@ -92,7 +80,17 @@ export default async function handler(req, res) {
         Séances: sheetSafe(booking.planSessions),
         Tarif: `${booking.total} DA`,
         Statut: 'Réservé (Non Payé)'
+      };
+
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rowData)
       });
+
+      if (!response.ok) {
+        throw new Error('Apps Script returned an error status.');
+      }
 
       // Tell frontend booking was successful directly
       return res.status(200).json({ success: true, type: 'direct' });
