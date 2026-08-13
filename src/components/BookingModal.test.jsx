@@ -42,11 +42,13 @@ const chooseSpace = async (user, card = bm.menCard) => {
   await user.click(btn(new RegExp(card)));
 };
 
+// Fill out the required form fields (name, phone, blood group, birthdate)
 const fillValidForm = async (user) => {
-  await user.type(nameInput(), 'Yacine B');
-  await user.type(phoneInput(), '0561234567');
-  await user.click(btn('O+'));
-  await user.type(birthdateInput(), '1995-04-09');
+  await user.type(screen.getByRole('textbox', { name: /nom/i }), 'Yacine B');
+  await user.type(screen.getByRole('textbox', { name: /téléphone/i }), '0561234567');
+  await user.click(screen.getByRole('button', { name: 'O+' }));
+  // Set date field
+  await user.type(screen.getByLabelText(/date de naissance/i), '2000-01-01');
 };
 
 /** Body of the booking request the form POSTs to /api/book. */
@@ -238,7 +240,13 @@ describe('BookingModal submission', () => {
     expect(init.method).toBe('POST');
     expect(init.headers['Content-Type']).toBe('application/json');
     expect(bookingPayload()).toEqual({
-      formData: { fullName: 'Yacine B', phone: '0561234567', gender: 'Homme' },
+      formData: { 
+        fullName: 'Yacine B', 
+        phone: '0561234567', 
+        gender: 'Homme',
+        bloodGroup: 'O+',
+        birthdate: '2000-01-01'
+      },
       months: 1,
     });
   });
