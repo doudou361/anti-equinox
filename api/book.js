@@ -75,6 +75,8 @@ export default async function handler(req, res) {
         Nom: sheetSafe(booking.fullName),
         Téléphone: sheetSafe(booking.phone),
         Sexe: sheetSafe(booking.gender),
+        GroupeSanguin: sheetSafe(booking.bloodGroup),
+        DateNaissance: sheetSafe(booking.birthdate),
         Abonnement: sheetSafe(booking.planName),
         Durée: sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
         Séances: sheetSafe(booking.planSessions),

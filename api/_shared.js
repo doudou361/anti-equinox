@@ -36,11 +36,15 @@ export function parseBooking(body) {
   const fullName = typeof formData.fullName === 'string' ? formData.fullName.trim() : '';
   const phone = typeof formData.phone === 'string' ? formData.phone.trim() : '';
   const gender = typeof formData.gender === 'string' ? formData.gender.trim() : '';
+  const bloodGroup = typeof formData.bloodGroup === 'string' ? formData.bloodGroup.trim() : '';
+  const birthdate = typeof formData.birthdate === 'string' ? formData.birthdate.trim() : '';
   const digits = phone.replace(/\D/g, '');
 
   if (!fullName || fullName.length > NAME_MAX) return { error: 'Invalid name.' };
   if (phone.length > PHONE_MAX || digits.length < 9 || digits.length > 15) return { error: 'Invalid phone number.' };
   if (gender && !ALLOWED_GENDERS.includes(gender)) return { error: 'Invalid gender.' };
+  if (bloodGroup && bloodGroup.length > 5) return { error: 'Invalid blood group.' };
+  if (birthdate && birthdate.length > 15) return { error: 'Invalid birthdate.' };
   if (!ALLOWED_MONTHS.includes(months)) return { error: 'Invalid duration.' };
 
   const found = findPlan(planId);
@@ -52,6 +56,8 @@ export function parseBooking(body) {
       fullName,
       phone,
       gender: gender || '-',
+      bloodGroup: bloodGroup || '-',
+      birthdate: birthdate || '-',
       months,
       planId: plan.id,
       planName: category.name,

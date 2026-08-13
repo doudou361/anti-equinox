@@ -305,6 +305,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
             fullName: name,
             phone: phone,
             gender: gender,
+            bloodGroup: bloodGroup,
+            birthdate: birthdate,
           },
           planId: plan.id,
           months,
