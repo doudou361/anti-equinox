@@ -68,7 +68,7 @@ const TeamSection = () => {
   const { t } = useLanguage();
 
   return (
-    <section id="team" style={{ padding: '6rem 0', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+    <section id="team" style={{ padding: '6rem 0', backgroundColor: '#070709', borderTop: '1px solid rgba(255,255,255,0.05)', overflowX: 'hidden' }}>
       <div className="container">
 
         {/* Intro Title */}
@@ -90,7 +90,7 @@ const TeamSection = () => {
           <motion.div
             initial={{ opacity: 0, x: -300, skewX: -15 }}
             whileInView={{ opacity: 1, x: 0, skewX: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.9, type: "spring", bounce: 0.4, delay: 0.2 }}
           >
             <CoachCard 
@@ -105,7 +105,7 @@ const TeamSection = () => {
           <motion.div
             initial={{ opacity: 0, x: 300, skewX: 15 }}
             whileInView={{ opacity: 1, x: 0, skewX: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.9, type: "spring", bounce: 0.4, delay: 0.3 }}
           >
             <CoachCard 
