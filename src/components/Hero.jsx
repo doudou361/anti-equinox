@@ -192,8 +192,8 @@ const Hero = () => {
                     rotate: [180, -45, 0]
                   }}
                   transition={{
-                    duration: 2,
-                    delay: 0.2 + (i * 0.15),
+                    duration: 5,
+                    delay: 0.2 + (i * 0.25),
                     times: [0, 0.6, 1],
                     ease: "easeInOut"
                   }}
@@ -236,8 +236,8 @@ const Hero = () => {
                   initial={initialProps}
                   animate={{ opacity: 1, x: 0, y: 0 }}
                   transition={{
-                    duration: 1,
-                    delay: 1.5 + (i * 0.2), // Start after the tagline finishes its orbit
+                    duration: 2,
+                    delay: 4.5 + (i * 0.4), // Start after the slower 5s tagline finishes its orbit
                     type: 'spring',
                     bounce: 0.4
                   }}
