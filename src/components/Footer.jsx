@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 
 const Footer = ({ onContactClick }) => {
@@ -16,7 +17,12 @@ const Footer = ({ onContactClick }) => {
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
         gap: '3rem'
       }}>
-        <div>
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+        >
           <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>
             EQUINOX <span className="text-gold">SPORTS CLUB</span>
           </h3>
@@ -31,9 +37,14 @@ const Footer = ({ onContactClick }) => {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
             </a>
           </div>
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.4, delay: 0.2 }}
+        >
           <h4 style={{ color: 'var(--text-main)', marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>
             {t('nav.contact')}
           </h4>
@@ -51,7 +62,7 @@ const Footer = ({ onContactClick }) => {
               <span>{t('contactModal.emailText')}</span>
             </a>
           </div>
-        </div>
+        </motion.div>
       </div>
       
       <div style={{

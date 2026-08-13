@@ -178,10 +178,10 @@ const Pricing = ({ onPlanBook, onCrossfitClick }) => {
 
           {/* Section header */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: -100 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1.2, type: "spring", bounce: 0.6 }}
             style={{ textAlign: 'center', marginBottom: '4rem' }}
           >
             <h2 style={{ fontSize: '3rem', color: 'var(--text-main)', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>

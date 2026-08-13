@@ -29,11 +29,11 @@ const Schedule = () => {
       <div className="container">
         
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          style={{ textAlign: 'center', marginBottom: '4rem' }}
+          initial={{ opacity: 0, scale: 0.8, rotateX: 45 }}
+          whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 1, type: "spring", bounce: 0.5 }}
+          style={{ textAlign: 'center', marginBottom: '4rem', transformPerspective: 1000 }}
         >
           <h2 style={{ fontSize: '3rem', color: 'var(--text-main)', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>
             {t('schedule.title')}
