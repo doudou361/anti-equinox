@@ -42,13 +42,14 @@ const chooseSpace = async (user, card = bm.menCard) => {
   await user.click(btn(new RegExp(card)));
 };
 
+const dateInput = () => document.querySelector('input[type="date"]');
+
 // Fill out the required form fields (name, phone, blood group, birthdate)
 const fillValidForm = async (user) => {
-  await user.type(screen.getByRole('textbox', { name: /nom/i }), 'Yacine B');
-  await user.type(screen.getByRole('textbox', { name: /téléphone/i }), '0561234567');
+  await user.type(nameInput(), 'Yacine B');
+  await user.type(phoneInput(), '0561234567');
   await user.click(screen.getByRole('button', { name: 'O+' }));
-  // Set date field
-  await user.type(screen.getByLabelText(/date de naissance/i), '2000-01-01');
+  await user.type(dateInput(), '2000-01-01');
 };
 
 /** Body of the booking request the form POSTs to /api/book. */

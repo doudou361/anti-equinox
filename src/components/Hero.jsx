@@ -150,30 +150,62 @@ const Hero = () => {
       <div className="container" style={{ position: 'relative', zIndex: 3, display: 'flex', justifyContent: 'center' }}>
         <div style={{
           textAlign: 'center',
-          maxWidth: '800px'
+          maxWidth: '800px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
         }}>
-          <motion.p 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          style={{
+          
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            marginBottom: '1.5rem',
             color: 'var(--gold-primary)',
             letterSpacing: '4px',
             fontWeight: 600,
             textTransform: 'uppercase',
-            marginBottom: '1rem',
             fontSize: '1rem',
             textShadow: '0 2px 10px rgba(0,0,0,0.8)'
-          }}
-        >
-          {t('hero.tagline')}
-        </motion.p>
+          }}>
+            {t('hero.tagline').split(' ').map((word, i, arr) => {
+              // Calculate a circle off-screen for the starting position
+              const angle1 = (i / arr.length) * Math.PI * 2;
+              const angle2 = angle1 + Math.PI; // Opposite side for cycle effect
+              return (
+                <motion.span
+                  key={`tagline-${i}`}
+                  custom={i}
+                  initial={{ 
+                    opacity: 0, 
+                    x: Math.cos(angle1) * 300, 
+                    y: Math.sin(angle1) * 300,
+                    scale: 0,
+                    rotate: 180
+                  }}
+                  animate={{
+                    opacity: [0, 1, 1, 1],
+                    x: [Math.cos(angle1) * 300, Math.cos(angle2) * 150, 0],
+                    y: [Math.sin(angle1) * 300, Math.sin(angle2) * 150, 0],
+                    scale: [0, 1.5, 1],
+                    rotate: [180, -45, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: 0.2 + (i * 0.15),
+                    times: [0, 0.6, 1],
+                    ease: "easeInOut"
+                  }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {word}
+                </motion.span>
+              );
+            })}
+          </div>
         
-        <motion.h1 
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-          style={{
+          <h1 style={{
             color: 'var(--text-main)',
             fontSize: 'clamp(3rem, 8vw, 6rem)',
             fontWeight: 700,
@@ -181,11 +213,42 @@ const Hero = () => {
             marginBottom: '2.5rem',
             textTransform: 'uppercase',
             fontFamily: 'var(--font-heading)',
-            textShadow: '0 4px 20px rgba(0,0,0,0.9)'
-          }}
-        >
-          {t('hero.title1')} <span className="text-gold">{t('hero.title2')}</span>
-        </motion.h1>
+            textShadow: '0 4px 20px rgba(0,0,0,0.9)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '1rem'
+          }}>
+            {`${t('hero.title1')} ${t('hero.title2')}`.split(' ').map((word, i) => {
+              let initialProps = { opacity: 0, x: 0, y: 0 };
+              if (i % 3 === 0) initialProps = { opacity: 0, x: -200, y: 0 }; // Left
+              else if (i % 3 === 1) initialProps = { opacity: 0, x: 200, y: 0 }; // Right
+              else if (i % 3 === 2) initialProps = { opacity: 0, x: 0, y: 200 }; // Below
+              
+              // Paint the words from title2 as gold (title2 is usually the last word(s))
+              // For simplicity, just color the last word gold, as was done originally
+              const totalWords = `${t('hero.title1')} ${t('hero.title2')}`.split(' ').length;
+              const isGold = i === totalWords - 1;
+
+              return (
+                <motion.span
+                  key={`title-${i}`}
+                  initial={initialProps}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  transition={{
+                    duration: 1,
+                    delay: 1.5 + (i * 0.2), // Start after the tagline finishes its orbit
+                    type: 'spring',
+                    bounce: 0.4
+                  }}
+                  className={isGold ? "text-gold" : ""}
+                  style={{ display: 'inline-block' }}
+                >
+                  {word}
+                </motion.span>
+              );
+            })}
+          </h1>
         </div>
       </div>
     </section>
