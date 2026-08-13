@@ -21,7 +21,7 @@ const Footer = ({ onContactClick }) => {
           initial={{ opacity: 0, x: -100 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+          transition={{ duration: 5, type: "spring", bounce: 0.4 }}
         >
           <h3 style={{ color: 'var(--text-main)', fontSize: '1.5rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>
             EQUINOX <span className="text-gold">SPORTS CLUB</span>
@@ -43,7 +43,7 @@ const Footer = ({ onContactClick }) => {
           initial={{ opacity: 0, x: 100 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.4, delay: 0.2 }}
+          transition={{ duration: 5, type: "spring", bounce: 0.4, delay: 0.2 }}
         >
           <h4 style={{ color: 'var(--text-main)', marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>
             {t('nav.contact')}

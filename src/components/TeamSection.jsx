@@ -76,7 +76,7 @@ const TeamSection = () => {
           initial={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
           whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 5, ease: "easeOut" }}
           style={{ textAlign: 'center', marginBottom: '4rem' }}
         >
           <h2 style={{ fontSize: '3rem', color: '#F4F4F5', margin: '0 auto', fontFamily: 'var(--font-heading)' }}>
@@ -89,7 +89,7 @@ const TeamSection = () => {
           initial={{ opacity: 0, x: -300, skewX: -15 }}
           whileInView={{ opacity: 1, x: 0, skewX: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.9, type: "spring", bounce: 0.4, delay: 0.2 }}
+          transition={{ duration: 5, type: "spring", bounce: 0.4, delay: 0.2 }}
           style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', justifyContent: 'center' }}
         >
           <CoachCard 
