@@ -85,29 +85,40 @@ const TeamSection = () => {
         </motion.div>
 
         {/* Coaches */}
-        <motion.div
-          initial={{ opacity: 0, x: -300, skewX: -15 }}
-          whileInView={{ opacity: 1, x: 0, skewX: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 5, type: "spring", bounce: 0.4, delay: 0.2 }}
-          style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', justifyContent: 'center' }}
-        >
-          <CoachCard 
-            name="Kamel Ailane" 
-            role="Head Coach" 
-            image="/coaches/kamel-ailane-2.jpg.jpg"
-            icon={Medal}
-            iconColor="#C5A059"
-          />
-          <CoachCard 
-            name="Mohamed Boukatha" 
-            role="Head Coach" 
-            image="/coaches/mohamed-boukatha-1.jpg.jpg"
-            icon={Medal}
-            iconColor="#C5A059"
-            bgPosition="top center"
-          />
-        </motion.div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', justifyContent: 'center' }}>
+          
+          <motion.div
+            initial={{ opacity: 0, x: -300, skewX: -15 }}
+            whileInView={{ opacity: 1, x: 0, skewX: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.9, type: "spring", bounce: 0.4, delay: 0.2 }}
+          >
+            <CoachCard 
+              name="Kamel Ailane" 
+              role="Head Coach" 
+              image="/coaches/kamel-ailane-2.jpg.jpg"
+              icon={Medal}
+              iconColor="#C5A059"
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 300, skewX: 15 }}
+            whileInView={{ opacity: 1, x: 0, skewX: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.9, type: "spring", bounce: 0.4, delay: 0.3 }}
+          >
+            <CoachCard 
+              name="Mohamed Boukatha" 
+              role="Head Coach" 
+              image="/coaches/mohamed-boukatha-1.jpg.jpg"
+              icon={Medal}
+              iconColor="#C5A059"
+              bgPosition="top center"
+            />
+          </motion.div>
+
+        </div>
 
       </div>
     </section>
