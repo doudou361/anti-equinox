@@ -48,10 +48,14 @@ const Navbar = ({ onBookClick, onContactClick, onCrossfitClick, onNutritionClick
               style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
             >
               <img
-                src="/logo.png"
+                src="/logo.webp"
                 alt="Equinox Sports Club"
+                width={150}
+                height={95}
+                fetchPriority="high"
                 style={{
                   height: '95px',
+                  width: 'auto',
                   objectFit: 'contain',
                   transform: 'scale(1.3)',
                   transformOrigin: 'left center'
@@ -178,6 +182,7 @@ const Navbar = ({ onBookClick, onContactClick, onCrossfitClick, onNutritionClick
           <button 
             className="mobile-menu-btn" 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Menu"
           >
             {isMobileMenuOpen ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
