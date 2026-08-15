@@ -265,7 +265,7 @@ const ContactModal = ({ isOpen, onClose }) => {
           }}>
             <iframe 
               title="Equinox Sports Club Location"
-              src="https://maps.google.com/maps?q=Equinox%20Sports%20Club,%20Ouled%20Haddadj,%20Algeria&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3198.0!2d3.3506621!3d36.717488!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e5d0a655baccf%3A0x1195fcb5e97e4068!2sEQUINOX%20sport%20club!5e0!3m2!1sen!2sdz!4v1700000000000!5m2!1sen!2sdz"
               width="100%" 
               height="100%" 
               style={{ border: 0, minHeight: '320px', filter: 'brightness(0.9) contrast(1.1)' }} 
