@@ -5,7 +5,7 @@
  * every displayed price updates automatically.
  */
 
-import { pricingCategories } from '../data/pricing';
+import { pricingCategories } from '../data/pricing.js';
 
 /**
  * Look up a pricing category by id.
