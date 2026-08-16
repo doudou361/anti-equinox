@@ -62,7 +62,7 @@ export default async function handler(req, res) {
 
     } else {
       // ── DIRECT GOOGLE SHEETS PIPELINE (Via Apps Script) ──
-      const scriptUrl = process.env.APPS_SCRIPT_URL;
+      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
 
       if (!scriptUrl) {
         console.warn("Missing APPS_SCRIPT_URL. Simulating success.");
