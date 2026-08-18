@@ -13,6 +13,7 @@ import CrossfitScheduleModal from './components/CrossfitScheduleModal'
 import TeamSection from './components/TeamSection'
 import Gallery from './components/Gallery'
 import NutritionPage from './pages/Nutrition'
+import AdminPanel from './components/AdminPanel'
 import './App.css'
 
 function AppContent() {
@@ -21,6 +22,7 @@ function AppContent() {
     const path = window.location.pathname;
     if (path === '/success') return 'success';
     if (path === '/cancel') return 'cancel';
+    if (path === '/admin') return 'admin';
     return 'home';
   });
 
@@ -82,7 +84,9 @@ function AppContent() {
 
   return (
     <>
-      {currentView === 'nutrition' && NUTRITION_ENABLED ? (
+      {currentView === 'admin' ? (
+        <AdminPanel />
+      ) : currentView === 'nutrition' && NUTRITION_ENABLED ? (
         <>
           <Navbar {...sharedNavProps} />
           <NutritionPage onHomeClick={goHome} />

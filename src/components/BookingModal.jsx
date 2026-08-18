@@ -270,15 +270,45 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
   const [birthdate,  setBirthdate]  = useState('');
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discountError, setDiscountError] = useState('');
+  const [isCheckingDiscount, setIsCheckingDiscount] = useState(false);
   const [errors,     setErrors]     = useState({});
   const [isLoading,  setIsLoading]  = useState(false);
 
   const total       = calculatePlanTotal(plan.monthlyRate, months);
   const full        = plan.monthlyRate * months;
-  const saved       = full - total;
+  const originalTotal = total;
+  const discountedTotal = discountPercent > 0 ? Math.round(total * (1 - (discountPercent / 100))) : total;
+  const saved       = full - discountedTotal;
   const show12Perk  = months === 12;
 
   const clear = (key) => setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
+
+  const handleCheckDiscount = async () => {
+    if (!discountCode.trim()) return;
+    setIsCheckingDiscount(true);
+    setDiscountError('');
+    try {
+      const res = await fetch('/api/validate-discount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountCode.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscountPercent(data.discount);
+      } else {
+        setDiscountPercent(0);
+        setDiscountError(data.error || 'Code invalide');
+      }
+    } catch (err) {
+      setDiscountError('Erreur de vérification');
+    } finally {
+      setIsCheckingDiscount(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -310,6 +340,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
           },
           planId: plan.id,
           months,
+          discountCode: discountPercent > 0 ? discountCode.trim() : null,
         })
       });
 
@@ -497,6 +528,58 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
           </div>
           
           {/* Receipt Details */}
+          {/* Discount Code Section */}
+        <div style={{ marginTop: '0.5rem', padding: '0 1.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="Code promo (optionnel)"
+              value={discountCode}
+              onChange={(e) => {
+                setDiscountCode(e.target.value);
+                setDiscountError('');
+                if (discountPercent > 0) setDiscountPercent(0);
+              }}
+              style={{
+                flex: 1, padding: '0.6rem 1rem', background: '#111',
+                border: '1px solid rgba(var(--theme-rgb), 0.2)', borderRadius: '8px',
+                color: '#fff', fontSize: '0.9rem', outline: 'none'
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleCheckDiscount}
+              disabled={isCheckingDiscount || !discountCode.trim()}
+              style={{
+                padding: '0.6rem 1rem', background: 'rgba(var(--theme-rgb), 0.1)',
+                color: 'var(--theme-primary)', border: 'none', borderRadius: '8px',
+                fontWeight: 600, cursor: isCheckingDiscount || !discountCode.trim() ? 'not-allowed' : 'pointer',
+                opacity: isCheckingDiscount || !discountCode.trim() ? 0.5 : 1
+              }}
+            >
+              {isCheckingDiscount ? '...' : 'Appliquer'}
+            </button>
+          </div>
+          {discountError && <span style={{ color: '#e07070', fontSize: '12px', marginTop: '0.3rem', display: 'block' }}>{discountError}</span>}
+          {discountPercent > 0 && <span style={{ color: 'var(--theme-primary)', fontSize: '12px', marginTop: '0.3rem', display: 'block' }}>Réduction de {discountPercent}% appliquée !</span>}
+        </div>
+
+        <hr style={{ border: 0, borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 1.5rem' }} />
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 1.5rem' }}>
+          <p style={{ fontSize: '12px', color: '#9A948A', fontWeight: 500 }}>Montant total</p>
+          <div style={{ textAlign: 'right' }}>
+            {discountPercent > 0 && (
+              <span style={{ fontSize: '14px', color: '#888', textDecoration: 'line-through', marginRight: '8px' }}>
+                {formatDA(originalTotal)}
+              </span>
+            )}
+            <p style={{ color: 'var(--theme-primary)', fontSize: '1.4rem', fontWeight: 800, lineHeight: 1 }}>
+              {formatDA(discountedTotal)}
+            </p>
+          </div>
+        </div>
+
           <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
               <span style={{ color: '#9A948A' }}>Nom</span>

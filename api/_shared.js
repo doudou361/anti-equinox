@@ -30,7 +30,7 @@ export function findPlan(planId) {
 export function parseBooking(body) {
   if (!body || typeof body !== 'object') return { error: 'Invalid payload.' };
 
-  const { formData, planId, months, selectedDate, selectedTime } = body;
+  const { formData, planId, months, selectedDate, selectedTime, discountCode } = body;
   if (!formData || typeof formData !== 'object') return { error: 'Invalid payload.' };
 
   const fullName = typeof formData.fullName === 'string' ? formData.fullName.trim() : '';
@@ -64,6 +64,7 @@ export function parseBooking(body) {
       planFrequency: plan.frequency,
       planSessions: plan.sessions || '-',
       total: calculatePlanTotal(plan.monthlyRate, months),
+      discountCode: typeof discountCode === 'string' ? discountCode.trim().toUpperCase() : null,
       selectedDate: typeof selectedDate === 'string' ? selectedDate.slice(0, 32) : '',
       selectedTime: typeof selectedTime === 'string' ? selectedTime.slice(0, 32) : '',
     },

@@ -1,4 +1,4 @@
-import Stripe from 'stripe';
+import { ChargilyClient } from '@chargily/chargily-pay';
 import { parseBooking, sheetSafe } from './_shared.js';
 
 export default async function handler(req, res) {
@@ -10,78 +10,102 @@ export default async function handler(req, res) {
   if (parsed.error) {
     return res.status(400).json({ error: parsed.error });
   }
-  const booking = parsed.booking;
+  let booking = parsed.booking;
+
+  const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
 
   try {
-    // In production, we don't need Google credentials here anymore since we use Apps Script webhook
-    // We just check APPS_SCRIPT_URL in the branch below.
+    // ── DISCOUNT VALIDATION ──
+    let discountRowIdx = null;
+    if (booking.discountCode) {
+      const getCodesRes = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCodes' })
+      });
+      if (getCodesRes.ok) {
+        const data = await getCodesRes.json();
+        if (data.success && data.codes) {
+          const match = data.codes.find(c => c.code.toUpperCase() === booking.discountCode);
+          if (match && match.active === 'YES' && Number(match.timesUsed) < Number(match.maxUses)) {
+            let isValid = true;
+            if (match.expiry) {
+              const parts = match.expiry.split('/');
+              if (parts.length === 3) {
+                const expiryDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T23:59:59`);
+                if (new Date() > expiryDate) isValid = false;
+              }
+            }
+            if (isValid) {
+              const discountPercent = Number(match.discount) || 0;
+              booking.total = Math.round(booking.total * (1 - (discountPercent / 100)));
+              booking.planName = `${booking.planName} (-${discountPercent}%)`;
+              discountRowIdx = match.rowIdx;
+            }
+          }
+        }
+      }
+    }
 
-    // Check if Stripe is configured
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    
-    if (stripeKey) {
-      // ── STRIPE PIPELINE ──
-      const stripe = new Stripe(stripeKey);
+    const chargilyKey = process.env.CHARGILY_SECRET_KEY;
+
+    if (chargilyKey) {
+      // ── CHARGILY PAY PIPELINE ──
+      const client = new ChargilyClient({
+        api_key: chargilyKey,
+        mode: chargilyKey.startsWith('test_') ? 'test' : 'live',
+      });
 
       const origin = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
 
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'dzd',
-              product_data: {
-                name: `Abonnement Équinox: ${booking.planName}`,
-                description: `${booking.planFrequency} - ${booking.planSessions} - ${booking.months} mois`,
-              },
-              unit_amount: booking.total * 100, // Stripe expects amounts in the smallest currency unit
-            },
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
+      const checkout = await client.createCheckout({
+        amount: booking.total,
+        currency: 'dzd',
+        payment_method: 'edahabia', // supports CIB + Dahabia + BaridiMob
         success_url: `${origin}/success`,
-        cancel_url: `${origin}/cancel`,
+        failure_url: `${origin}/cancel`,
+        webhook_endpoint: `${origin}/api/chargily-webhook`,
+        description: `Abonnement Équinox: ${booking.planName}`,
+        locale: 'fr',
         metadata: {
-          customerName: booking.fullName,
-          customerPhone: booking.phone,
+          customerName:   booking.fullName,
+          customerPhone:  booking.phone,
           customerGender: booking.gender,
-          planName: booking.planName,
-          planFrequency: booking.planFrequency,
-          planSessions: booking.planSessions,
-          months: String(booking.months),
-          amountPaid: String(booking.total),
-          date: booking.selectedDate,
-          time: booking.selectedTime,
+          bloodGroup:     booking.bloodGroup     || '',
+          birthdate:      booking.birthdate      || '',
+          planName:       booking.planName,
+          planFrequency:  booking.planFrequency,
+          planSessions:   booking.planSessions,
+          months:         String(booking.months),
+          amountPaid:     String(booking.total),
+          discountRowIdx: discountRowIdx ? String(discountRowIdx) : '',
         }
       });
 
-      // Tell frontend to redirect to Stripe
-      return res.status(200).json({ url: session.url, type: 'stripe' });
+      // Tell the frontend to redirect to Chargily's payment page
+      return res.status(200).json({ url: checkout.checkout_url, type: 'chargily' });
 
     } else {
-      // ── DIRECT GOOGLE SHEETS PIPELINE (Via Apps Script) ──
-      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
-
+      // ── DIRECT GOOGLE SHEETS PIPELINE (no payment gateway configured) ──
       if (!scriptUrl) {
-        console.warn("Missing APPS_SCRIPT_URL. Simulating success.");
+        console.warn('Missing APPS_SCRIPT_URL. Simulating success.');
         await new Promise(resolve => setTimeout(resolve, 800));
         return res.status(200).json({ success: true, type: 'simulated' });
       }
 
       const rowData = {
-        Date: new Date().toLocaleDateString('fr-FR'),
-        Nom: sheetSafe(booking.fullName),
-        Téléphone: sheetSafe(booking.phone),
-        Sexe: sheetSafe(booking.gender),
+        action: 'book',
+        Date:          new Date().toLocaleDateString('fr-FR'),
+        Nom:           sheetSafe(booking.fullName),
+        Téléphone:     sheetSafe(booking.phone),
+        Sexe:          sheetSafe(booking.gender),
         GroupeSanguin: sheetSafe(booking.bloodGroup),
         DateNaissance: sheetSafe(booking.birthdate),
-        Abonnement: sheetSafe(booking.planName),
-        Durée: sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
-        Séances: sheetSafe(booking.planSessions),
-        Tarif: `${booking.total} DA`,
-        Statut: 'Réservé (Non Payé)'
+        Abonnement:    sheetSafe(booking.planName),
+        Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
+        Séances:       sheetSafe(booking.planSessions),
+        Tarif:         `${booking.total} DA`,
+        Statut:        'Réservé (Non Payé)'
       };
 
       const response = await fetch(scriptUrl, {
@@ -90,11 +114,16 @@ export default async function handler(req, res) {
         body: JSON.stringify(rowData)
       });
 
-      if (!response.ok) {
-        throw new Error('Apps Script returned an error status.');
+      if (!response.ok) throw new Error('Apps Script returned an error status.');
+
+      if (discountRowIdx) {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'incrementUse', rowIdx: discountRowIdx })
+        });
       }
 
-      // Tell frontend booking was successful directly
       return res.status(200).json({ success: true, type: 'direct' });
     }
 
