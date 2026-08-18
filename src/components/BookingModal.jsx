@@ -351,9 +351,11 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
 
       const data = await response.json();
 
-      if (data.type === 'stripe' && data.url) {
+      // If Chargily or any payment gateway returned a redirect URL → go to payment
+      if (data.url) {
         window.location.href = data.url;
       } else {
+        // No payment required — show the confirmation receipt directly
         onSubmit();
       }
     } catch (err) {
