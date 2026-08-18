@@ -576,13 +576,8 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 1.5rem' }}>
           <p style={{ fontSize: '12px', color: '#9A948A', fontWeight: 500 }}>Montant total</p>
           <div style={{ textAlign: 'right' }}>
-            {discountPercent > 0 && (
-              <span style={{ fontSize: '14px', color: '#888', textDecoration: 'line-through', marginRight: '8px' }}>
-                {formatDA(originalTotal)}
-              </span>
-            )}
             <p style={{ color: 'var(--theme-primary)', fontSize: '1.4rem', fontWeight: 800, lineHeight: 1 }}>
-              {formatDA(discountedTotal)}
+              {formatDA(total)}
             </p>
           </div>
         </div>
@@ -611,14 +606,21 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
 
             {saved > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
-                <span style={{ color: '#10b981' }}>Économie</span>
+                <span style={{ color: '#10b981' }}>Économie (Formule {months} mois)</span>
                 <span style={{ color: '#10b981', fontWeight: 700 }}>-{formatDA(saved)}</span>
+              </div>
+            )}
+
+            {discountPercent > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                <span style={{ color: '#10b981' }}>Code Promo ({discountPercent}%)</span>
+                <span style={{ color: '#10b981', fontWeight: 700 }}>-{formatDA(total - discountedTotal)}</span>
               </div>
             )}
             
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(var(--theme-rgb), 0.2)' }}>
               <span style={{ color: '#F4F4F5', fontWeight: 700 }}>Total à Payer</span>
-              <span style={{ color: 'var(--theme-primary)', fontWeight: 900 }}>{formatDA(total)}</span>
+              <span style={{ color: 'var(--theme-primary)', fontWeight: 900 }}>{formatDA(discountedTotal)}</span>
             </div>
 
             <button type="button" onClick={onClose} style={{
