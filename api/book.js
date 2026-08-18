@@ -82,6 +82,34 @@ export default async function handler(req, res) {
         }
       });
 
+      // ── Save booking to Google Sheets IMMEDIATELY with pending status ──
+      // This ensures no lead is lost even if the user doesn't complete payment.
+      const rowData = {
+        action: 'book',
+        Date:          new Date().toLocaleDateString('fr-FR'),
+        Nom:           sheetSafe(booking.fullName),
+        Téléphone:     sheetSafe(booking.phone),
+        Sexe:          sheetSafe(booking.gender),
+        GroupeSanguin: sheetSafe(booking.bloodGroup  || ''),
+        DateNaissance: sheetSafe(booking.birthdate   || ''),
+        Abonnement:    sheetSafe(booking.planName),
+        Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
+        Séances:       sheetSafe(booking.planSessions),
+        Tarif:         `${booking.total} DA`,
+        Statut:        '⏳ En attente de paiement'
+      };
+
+      try {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rowData)
+        });
+      } catch (sheetErr) {
+        console.error('Failed to pre-save booking to sheet:', sheetErr.message);
+        // Don't block — still redirect to Chargily
+      }
+
       // Tell the frontend to redirect to Chargily's payment page
       return res.status(200).json({ url: checkout.checkout_url, type: 'chargily' });
 
