@@ -501,6 +501,49 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
         </p>
       </div>
 
+      {/* Discount Code Section */}
+      <div style={{
+        padding: '0.875rem 1rem',
+        background: 'rgba(var(--theme-rgb), 0.05)', border: '1px dashed rgba(var(--theme-rgb), 0.30)',
+        borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.5rem'
+      }}>
+        <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#9A948A', fontWeight: 600 }}>
+          Code Promo (Optionnel)
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Ex: RAMADAN30"
+            value={discountCode}
+            onChange={(e) => {
+              setDiscountCode(e.target.value.toUpperCase());
+              setDiscountError('');
+              if (discountPercent > 0) setDiscountPercent(0);
+            }}
+            style={{
+              flex: 1, padding: '0.85rem 1rem', background: '#0A0A0A',
+              border: '1px solid rgba(var(--theme-rgb), 0.40)', borderRadius: '8px',
+              color: '#fff', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s'
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleCheckDiscount}
+            disabled={isCheckingDiscount || !discountCode.trim()}
+            style={{
+              padding: '0.85rem 1.5rem', background: 'var(--theme-primary)',
+              color: '#000', border: 'none', borderRadius: '8px',
+              fontWeight: 800, cursor: isCheckingDiscount || !discountCode.trim() ? 'not-allowed' : 'pointer',
+              opacity: isCheckingDiscount || !discountCode.trim() ? 0.5 : 1, transition: 'all 0.2s'
+            }}
+          >
+            {isCheckingDiscount ? '...' : 'Appliquer'}
+          </button>
+        </div>
+        {discountError && <span style={{ color: '#e07070', fontSize: '12px', fontWeight: 500 }}>{discountError}</span>}
+        {discountPercent > 0 && <span style={{ color: 'var(--theme-primary)', fontSize: '13px', fontWeight: 600 }}>Réduction de {discountPercent}% appliquée ! 🎉</span>}
+      </div>
+
       {/* Submit / success */}
       {errors.form && (
         <div style={{ color: '#e07070', fontSize: '14px', textAlign: 'center', fontWeight: 500 }}>
@@ -528,43 +571,7 @@ const BookingForm = ({ plan, gender, onSubmit, submitted, onClose }) => {
           </div>
           
           {/* Receipt Details */}
-          {/* Discount Code Section */}
-        <div style={{ marginTop: '0.5rem', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="text"
-              placeholder="Code promo (optionnel)"
-              value={discountCode}
-              onChange={(e) => {
-                setDiscountCode(e.target.value);
-                setDiscountError('');
-                if (discountPercent > 0) setDiscountPercent(0);
-              }}
-              style={{
-                flex: 1, padding: '0.6rem 1rem', background: '#111',
-                border: '1px solid rgba(var(--theme-rgb), 0.2)', borderRadius: '8px',
-                color: '#fff', fontSize: '0.9rem', outline: 'none'
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleCheckDiscount}
-              disabled={isCheckingDiscount || !discountCode.trim()}
-              style={{
-                padding: '0.6rem 1rem', background: 'rgba(var(--theme-rgb), 0.1)',
-                color: 'var(--theme-primary)', border: 'none', borderRadius: '8px',
-                fontWeight: 600, cursor: isCheckingDiscount || !discountCode.trim() ? 'not-allowed' : 'pointer',
-                opacity: isCheckingDiscount || !discountCode.trim() ? 0.5 : 1
-              }}
-            >
-              {isCheckingDiscount ? '...' : 'Appliquer'}
-            </button>
-          </div>
-          {discountError && <span style={{ color: '#e07070', fontSize: '12px', marginTop: '0.3rem', display: 'block' }}>{discountError}</span>}
-          {discountPercent > 0 && <span style={{ color: 'var(--theme-primary)', fontSize: '12px', marginTop: '0.3rem', display: 'block' }}>Réduction de {discountPercent}% appliquée !</span>}
-        </div>
-
-        <hr style={{ border: 0, borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 1.5rem' }} />
+          <hr style={{ border: 0, borderTop: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 1.5rem' }} />
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 1.5rem' }}>
           <p style={{ fontSize: '12px', color: '#9A948A', fontWeight: 500 }}>Montant total</p>
