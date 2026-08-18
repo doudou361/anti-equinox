@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Check, Mail, ArrowRight } from 'lucide-react';
 
 export default function AdminLogin({ onLogin }) {
-  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState(1); // 1 = email, 2 = code
