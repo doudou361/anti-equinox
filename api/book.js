@@ -73,7 +73,7 @@ export default async function handler(req, res) {
   let booking = parsed.booking;
 
   const scriptUrl = process.env.APPS_SCRIPT_URL ||
-    'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
+    'https://script.google.com/macros/s/AKfycbwebJUzCgPul04E6z3NqZj9_EYVIH9SyGCEFa2NN9_gXqdsT_CcGaP-JEVcs_gD0PGx/exec';
 
   try {
     // ── 1. DISCOUNT VALIDATION ──────────────────────────────────────────────

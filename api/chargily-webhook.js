@@ -52,7 +52,8 @@ export default async function handler(req, res) {
   const meta = checkout.metadata || {};
 
   // ── 4. Save the confirmed booking to Google Sheets ──
-  const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
+  const scriptUrl = process.env.APPS_SCRIPT_URL ||
+    'https://script.google.com/macros/s/AKfycbwebJUzCgPul04E6z3NqZj9_EYVIH9SyGCEFa2NN9_gXqdsT_CcGaP-JEVcs_gD0PGx/exec';
 
   const rowData = {
     action: 'book',

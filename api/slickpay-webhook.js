@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   // ── 4. Update the Google Sheet row from ⏳ to ✅ ─────────────────────────
   // We find the matching booking by phone + amount and update the status.
   const scriptUrl = process.env.APPS_SCRIPT_URL ||
-    'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
+    'https://script.google.com/macros/s/AKfycbwebJUzCgPul04E6z3NqZj9_EYVIH9SyGCEFa2NN9_gXqdsT_CcGaP-JEVcs_gD0PGx/exec';
 
   try {
     // Update the most recent pending booking to "Payé"
