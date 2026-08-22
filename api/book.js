@@ -1,5 +1,40 @@
-import { ChargilyClient } from '@chargily/chargily-pay';
 import { parseBooking, sheetSafe } from './_shared.js';
+
+// ── SlickPay REST API helper ───────────────────────────────────────────────────
+// Using plain fetch — no extra SDK needed.
+// Docs: https://prodapi.slick-pay.com/api/v2/merchants/invoices  (live)
+//       https://devapi.slick-pay.com/api/v2/merchants/invoices   (sandbox)
+
+async function createSlickPayInvoice({ publicKey, sandbox, amount, name, backUrl, webhookUrl }) {
+  const base = sandbox
+    ? 'https://devapi.slick-pay.com/api/v2'
+    : 'https://prodapi.slick-pay.com/api/v2';
+
+  const res = await fetch(`${base}/merchants/invoices`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${publicKey}`,
+    },
+    body: JSON.stringify({
+      amount,
+      name,
+      back_url:    backUrl,
+      webhook_url: webhookUrl,
+      freez_amount: true,  // lock the amount so the user can't change it
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.status);
+    throw new Error(`SlickPay API error (${res.status}): ${text}`);
+  }
+
+  return res.json();  // { code: 200, link: "https://slick-pay.com/pay/xxx" }
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,17 +47,19 @@ export default async function handler(req, res) {
   }
   let booking = parsed.booking;
 
-  const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
+  const scriptUrl = process.env.APPS_SCRIPT_URL ||
+    'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
 
   try {
-    // ── DISCOUNT VALIDATION ──
+    // ── 1. DISCOUNT VALIDATION ──────────────────────────────────────────────
     let discountRowIdx = null;
     if (booking.discountCode) {
       const getCodesRes = await fetch(scriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'getCodes' })
+        body: JSON.stringify({ action: 'getCodes' }),
       });
+
       if (getCodesRes.ok) {
         const data = await getCodesRes.json();
         if (data.success && data.codes) {
@@ -47,109 +84,73 @@ export default async function handler(req, res) {
       }
     }
 
-    const chargilyKey = process.env.CHARGILY_SECRET_KEY;
+    // ── 2. PRE-SAVE to Google Sheets (captures the lead even if user doesn't pay) ──
+    const rowData = {
+      action:        'book',
+      Date:          new Date().toLocaleDateString('fr-FR'),
+      Nom:           sheetSafe(booking.fullName),
+      Téléphone:     sheetSafe(booking.phone),
+      Sexe:          sheetSafe(booking.gender),
+      GroupeSanguin: sheetSafe(booking.bloodGroup  || ''),
+      DateNaissance: sheetSafe(booking.birthdate   || ''),
+      Abonnement:    sheetSafe(booking.planName),
+      Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
+      Séances:       sheetSafe(booking.planSessions),
+      Tarif:         `${booking.total} DA`,
+      Statut:        '⏳ En attente de paiement',
+    };
 
-    if (chargilyKey) {
-      // ── CHARGILY PAY PIPELINE ──
-      const client = new ChargilyClient({
-        api_key: chargilyKey,
-        mode: chargilyKey.startsWith('test_') ? 'test' : 'live',
-      });
-
-      const origin = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
-
-      const checkout = await client.createCheckout({
-        amount: booking.total,
-        currency: 'dzd',
-        payment_method: 'edahabia', // supports CIB + Dahabia + BaridiMob
-        success_url: `${origin}/success`,
-        failure_url: `${origin}/cancel`,
-        webhook_endpoint: `${origin}/api/chargily-webhook`,
-        description: `Abonnement Équinox: ${booking.planName}`,
-        locale: 'fr',
-        metadata: {
-          customerName:   booking.fullName,
-          customerPhone:  booking.phone,
-          customerGender: booking.gender,
-          bloodGroup:     booking.bloodGroup     || '',
-          birthdate:      booking.birthdate      || '',
-          planName:       booking.planName,
-          planFrequency:  booking.planFrequency,
-          planSessions:   booking.planSessions,
-          months:         String(booking.months),
-          amountPaid:     String(booking.total),
-          discountRowIdx: discountRowIdx ? String(discountRowIdx) : '',
-        }
-      });
-
-      // ── Save booking to Google Sheets IMMEDIATELY with pending status ──
-      // This ensures no lead is lost even if the user doesn't complete payment.
-      const rowData = {
-        action: 'book',
-        Date:          new Date().toLocaleDateString('fr-FR'),
-        Nom:           sheetSafe(booking.fullName),
-        Téléphone:     sheetSafe(booking.phone),
-        Sexe:          sheetSafe(booking.gender),
-        GroupeSanguin: sheetSafe(booking.bloodGroup  || ''),
-        DateNaissance: sheetSafe(booking.birthdate   || ''),
-        Abonnement:    sheetSafe(booking.planName),
-        Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
-        Séances:       sheetSafe(booking.planSessions),
-        Tarif:         `${booking.total} DA`,
-        Statut:        '⏳ En attente de paiement'
-      };
-
-      try {
-        await fetch(scriptUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(rowData)
-        });
-      } catch (sheetErr) {
-        console.error('Failed to pre-save booking to sheet:', sheetErr.message);
-        // Don't block — still redirect to Chargily
-      }
-
-      // Tell the frontend to redirect to Chargily's payment page
-      return res.status(200).json({ url: checkout.checkout_url, type: 'chargily' });
-
-    } else {
-      // ── DIRECT GOOGLE SHEETS PIPELINE (no payment gateway configured) ──
-      if (!scriptUrl) {
-        console.warn('Missing APPS_SCRIPT_URL. Simulating success.');
-        await new Promise(resolve => setTimeout(resolve, 800));
-        return res.status(200).json({ success: true, type: 'simulated' });
-      }
-
-      const rowData = {
-        action: 'book',
-        Date:          new Date().toLocaleDateString('fr-FR'),
-        Nom:           sheetSafe(booking.fullName),
-        Téléphone:     sheetSafe(booking.phone),
-        Sexe:          sheetSafe(booking.gender),
-        GroupeSanguin: sheetSafe(booking.bloodGroup),
-        DateNaissance: sheetSafe(booking.birthdate),
-        Abonnement:    sheetSafe(booking.planName),
-        Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
-        Séances:       sheetSafe(booking.planSessions),
-        Tarif:         `${booking.total} DA`,
-        Statut:        'Réservé (Non Payé)'
-      };
-
-      const response = await fetch(scriptUrl, {
+    try {
+      await fetch(scriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rowData)
+        body: JSON.stringify(rowData),
+      });
+    } catch (sheetErr) {
+      console.error('Pre-save to sheet failed:', sheetErr.message);
+      // Don't block — still proceed to payment
+    }
+
+    // ── 3. PAYMENT GATEWAY ──────────────────────────────────────────────────
+    const slickPayKey = process.env.SLICKPAY_PUBLIC_KEY;
+    const sandbox     = process.env.SLICKPAY_SANDBOX === 'true';
+    const origin      = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
+
+    if (slickPayKey) {
+      // ── SlickPay pipeline ──
+      const invoice = await createSlickPayInvoice({
+        publicKey:  slickPayKey,
+        sandbox,
+        amount:     booking.total,
+        name:       `Équinox Sport Club — ${booking.planName}`,
+        backUrl:    `${origin}/success`,
+        webhookUrl: `${origin}/api/slickpay-webhook`,
       });
 
-      if (!response.ok) throw new Error('Apps Script returned an error status.');
+      if (!invoice.link) {
+        throw new Error('SlickPay did not return a payment link.');
+      }
 
+      // Increment discount usage immediately (since we already captured the lead)
       if (discountRowIdx) {
         await fetch(scriptUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'incrementUse', rowIdx: discountRowIdx })
-        });
+          body: JSON.stringify({ action: 'incrementUse', rowIdx: discountRowIdx }),
+        }).catch(e => console.error('incrementUse failed:', e.message));
+      }
+
+      // Redirect user to SlickPay hosted payment page
+      return res.status(200).json({ url: invoice.link, type: 'slickpay' });
+
+    } else {
+      // ── Direct Google Sheets pipeline (no payment gateway configured) ──
+      if (discountRowIdx) {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'incrementUse', rowIdx: discountRowIdx }),
+        }).catch(e => console.error('incrementUse failed:', e.message));
       }
 
       return res.status(200).json({ success: true, type: 'direct' });

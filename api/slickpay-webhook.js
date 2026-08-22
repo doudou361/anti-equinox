@@ -1,0 +1,61 @@
+import { sheetSafe } from './_shared.js';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  // ── 1. Parse the incoming webhook payload from SlickPay ──────────────────
+  let event;
+  try {
+    event = typeof req.body === 'object' ? req.body : JSON.parse(req.body.toString());
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  // ── 2. Optional signature verification using our Secret Key ──────────────
+  // SlickPay passes the secret key back in the webhook payload for verification.
+  // We compare it against our stored SLICKPAY_SECRET_KEY to confirm authenticity.
+  const secretKey = process.env.SLICKPAY_SECRET_KEY;
+  if (secretKey && event.secret && event.secret !== secretKey) {
+    console.warn('SlickPay webhook: secret key mismatch — possible forgery');
+    return res.status(403).json({ error: 'Invalid secret' });
+  }
+
+  console.log('SlickPay webhook received:', JSON.stringify(event));
+
+  // ── 3. Only act on confirmed payments ─────────────────────────────────────
+  // SlickPay sends status: "paid" or "cancelled" etc.
+  const status = (event.status || event.payment_status || '').toLowerCase();
+  if (status !== 'paid' && status !== 'payment_confirmed') {
+    console.log('SlickPay webhook: payment not confirmed yet, status:', status);
+    return res.status(200).json({ received: true });
+  }
+
+  // ── 4. Update the Google Sheet row from ⏳ to ✅ ─────────────────────────
+  // We find the matching booking by phone + amount and update the status.
+  const scriptUrl = process.env.APPS_SCRIPT_URL ||
+    'https://script.google.com/macros/s/AKfycbzBWQDjQaCv5Ux0cr2nYaV-Cx-HzDm3wZRJKQJhY7FDcHH1GsCg6j90IE3meRNURXjpCw/exec';
+
+  try {
+    // Update the most recent pending booking to "Payé"
+    // SlickPay webhook sends: order_id, amount, invoice_id, etc.
+    const updatePayload = {
+      action:   'updateStatus',
+      orderId:  event.order_id   || event.invoice_id || '',
+      amount:   event.amount     || '',
+      statut:   '✅ Payé via SlickPay',
+    };
+
+    await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatePayload),
+    });
+
+    console.log('SlickPay payment confirmed and sheet updated:', event.order_id);
+  } catch (err) {
+    console.error('Failed to update sheet after SlickPay payment:', err.message);
+    // Still return 200 so SlickPay doesn't keep retrying
+  }
+
+  return res.status(200).json({ received: true });
+}
