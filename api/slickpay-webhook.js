@@ -11,13 +11,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  // ── 2. Optional signature verification using our Secret Key ──────────────
-  // SlickPay passes the secret key back in the webhook payload for verification.
-  // We compare it against our stored SLICKPAY_SECRET_KEY to confirm authenticity.
+  // ── 2. Signature verification using our Secret Key ──────────────
   const secretKey = process.env.SLICKPAY_SECRET_KEY;
-  if (secretKey && event.secret && event.secret !== secretKey) {
-    console.warn('SlickPay webhook: secret key mismatch — possible forgery');
-    return res.status(403).json({ error: 'Invalid secret' });
+  if (secretKey) {
+    // If a secret key is configured, it MUST be present and match exactly.
+    // (This prevents an attacker from bypassing the check by simply omitting the field)
+    if (!event.secret || event.secret !== secretKey) {
+      console.warn('SlickPay webhook: secret key missing or mismatch — forgery attempt blocked');
+      return res.status(403).json({ error: 'Invalid secret or signature' });
+    }
   }
 
   console.log('SlickPay webhook received:', JSON.stringify(event));
