@@ -10,20 +10,20 @@ export default async function handler(req, res) {
   const testPayload = JSON.stringify({
     amount: 500,
     url:    'https://anti-equinox.vercel.app/success',
-    name:   'Kamel Test',
-    phone:  '0550000000',
-    address: 'Algérie',
+    firstname: 'Kamel',
+    lastname:  'Test',
+    email:     'client@test.com',
+    phone:     '0550000000',
+    address:   'Algérie',
     items:  [{ name: 'Test Plan', price: 500, quantity: 1 }],
   });
 
   const results = {};
 
-  // Try all 4 combinations of key + endpoint
+  // Try just users/invoices with both keys
   const combos = [
-    { label: 'publicKey + users/invoices',     key: publicKey, endpoint: `${base}/users/invoices` },
-    { label: 'secretKey + users/invoices',     key: secretKey, endpoint: `${base}/users/invoices` },
-    { label: 'publicKey + merchants/invoices', key: publicKey, endpoint: `${base}/merchants/invoices` },
-    { label: 'secretKey + merchants/invoices', key: secretKey, endpoint: `${base}/merchants/invoices` },
+    { label: 'publicKey + users/invoices', key: publicKey, endpoint: `${base}/users/invoices` },
+    { label: 'secretKey + users/invoices', key: secretKey, endpoint: `${base}/users/invoices` },
   ];
 
   for (const combo of combos) {

@@ -10,11 +10,18 @@ async function createSlickPayInvoice({ publicKey, sandbox, amount, planName, cus
     ? 'https://devapi.slick-pay.com/api/v2'
     : 'https://prodapi.slick-pay.com/api/v2';
 
+  // Split full name into first and last for SlickPay
+  const nameParts = (customerName || 'Client').trim().split(' ');
+  const firstname = nameParts[0] || 'Client';
+  const lastname  = nameParts.slice(1).join(' ') || 'Equinox';
+
   const payload = {
-    name:        customerName,   // required: customer full name
-    phone:       customerPhone,  // required: customer phone (or email)
-    address:     'Algérie',      // required: address (using default)
     amount,
+    firstname,
+    lastname,
+    address:     'Algérie',
+    phone:       customerPhone || '0000000000',
+    email:       'client@equinoxsportclub.com', // Required by users API if contact UUID is missing
     url:         backUrl,
     webhook_url: webhookUrl,
     items: [
@@ -26,9 +33,9 @@ async function createSlickPayInvoice({ publicKey, sandbox, amount, planName, cus
     ],
   };
 
-  console.log('SlickPay request →', `${base}/merchants/invoices`, JSON.stringify(payload));
+  console.log('SlickPay request →', `${base}/users/invoices`, JSON.stringify(payload));
 
-  const res = await fetch(`${base}/merchants/invoices`, {
+  const res = await fetch(`${base}/users/invoices`, {
     method: 'POST',
     headers: {
       'Accept':        'application/json',
