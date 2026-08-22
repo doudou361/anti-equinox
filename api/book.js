@@ -10,28 +10,43 @@ async function createSlickPayInvoice({ publicKey, sandbox, amount, name, backUrl
     ? 'https://devapi.slick-pay.com/api/v2'
     : 'https://prodapi.slick-pay.com/api/v2';
 
-  const res = await fetch(`${base}/merchants/invoices`, {
+  const payload = {
+    amount,                // required — total amount in DZD (must be > 100)
+    url:         backUrl,  // redirect URL after payment (field is "url" not "back_url")
+    webhook_url: webhookUrl,
+    items: [
+      {
+        name:     name,
+        price:    amount,
+        quantity: 1,
+      }
+    ],
+  };
+
+  console.log('SlickPay request →', base, JSON.stringify(payload));
+
+  const res = await fetch(`${base}/users/invoices`, {
     method: 'POST',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      'Accept':        'application/json',
+      'Content-Type':  'application/json',
       'Authorization': `Bearer ${publicKey}`,
     },
-    body: JSON.stringify({
-      amount,
-      name,
-      back_url:    backUrl,
-      webhook_url: webhookUrl,
-      freez_amount: true,  // lock the amount so the user can't change it
-    }),
+    body: JSON.stringify(payload),
   });
 
+  const text = await res.text();
+  console.log('SlickPay response ←', res.status, text);
+
   if (!res.ok) {
-    const text = await res.text().catch(() => res.status);
     throw new Error(`SlickPay API error (${res.status}): ${text}`);
   }
 
-  return res.json();  // { code: 200, link: "https://slick-pay.com/pay/xxx" }
+  let json;
+  try { json = JSON.parse(text); } catch { json = {}; }
+
+  // SlickPay returns { code: 200, url: "https://slick-pay.com/pay/xxx" }
+  return json;
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -127,11 +142,13 @@ export default async function handler(req, res) {
         webhookUrl: `${origin}/api/slickpay-webhook`,
       });
 
-      if (!invoice.link) {
-        throw new Error('SlickPay did not return a payment link.');
+      if (!invoice.url && !invoice.link) {
+        throw new Error(`SlickPay did not return a payment URL. Response: ${JSON.stringify(invoice)}`);
       }
 
-      // Increment discount usage immediately (since we already captured the lead)
+      const paymentUrl = invoice.url || invoice.link;
+
+      // Increment discount usage immediately
       if (discountRowIdx) {
         await fetch(scriptUrl, {
           method: 'POST',
@@ -141,7 +158,7 @@ export default async function handler(req, res) {
       }
 
       // Redirect user to SlickPay hosted payment page
-      return res.status(200).json({ url: invoice.link, type: 'slickpay' });
+      return res.status(200).json({ url: paymentUrl, type: 'slickpay' });
 
     } else {
       // ── Direct Google Sheets pipeline (no payment gateway configured) ──
