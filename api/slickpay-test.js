@@ -10,7 +10,10 @@ export default async function handler(req, res) {
   const testPayload = JSON.stringify({
     amount: 500,
     url:    'https://anti-equinox.vercel.app/success',
-    items:  [{ name: 'Test', price: 500, quantity: 1 }],
+    name:   'Kamel Test',
+    phone:  '0550000000',
+    address: 'Algérie',
+    items:  [{ name: 'Test Plan', price: 500, quantity: 1 }],
   });
 
   const results = {};
