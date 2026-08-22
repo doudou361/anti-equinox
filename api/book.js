@@ -5,27 +5,30 @@ import { parseBooking, sheetSafe } from './_shared.js';
 // Docs: https://prodapi.slick-pay.com/api/v2/merchants/invoices  (live)
 //       https://devapi.slick-pay.com/api/v2/merchants/invoices   (sandbox)
 
-async function createSlickPayInvoice({ publicKey, sandbox, amount, name, backUrl, webhookUrl }) {
+async function createSlickPayInvoice({ publicKey, sandbox, amount, planName, customerName, customerPhone, backUrl, webhookUrl }) {
   const base = sandbox
     ? 'https://devapi.slick-pay.com/api/v2'
     : 'https://prodapi.slick-pay.com/api/v2';
 
   const payload = {
-    amount,                // required — total amount in DZD (must be > 100)
-    url:         backUrl,  // redirect URL after payment (field is "url" not "back_url")
+    name:        customerName,   // required: customer full name
+    phone:       customerPhone,  // required: customer phone (or email)
+    address:     'Algérie',      // required: address (using default)
+    amount,
+    url:         backUrl,
     webhook_url: webhookUrl,
     items: [
       {
-        name:     name,
+        name:     planName,
         price:    amount,
         quantity: 1,
       }
     ],
   };
 
-  console.log('SlickPay request →', base, JSON.stringify(payload));
+  console.log('SlickPay request →', `${base}/merchants/invoices`, JSON.stringify(payload));
 
-  const res = await fetch(`${base}/users/invoices`, {
+  const res = await fetch(`${base}/merchants/invoices`, {
     method: 'POST',
     headers: {
       'Accept':        'application/json',
@@ -45,7 +48,7 @@ async function createSlickPayInvoice({ publicKey, sandbox, amount, name, backUrl
   let json;
   try { json = JSON.parse(text); } catch { json = {}; }
 
-  // SlickPay returns { code: 200, url: "https://slick-pay.com/pay/xxx" }
+  // SlickPay returns { ..., url: "https://slick-pay.com/pay/xxx" }
   return json;
 }
 
@@ -134,12 +137,14 @@ export default async function handler(req, res) {
     if (slickPayKey) {
       // ── SlickPay pipeline ──
       const invoice = await createSlickPayInvoice({
-        publicKey:  slickPayKey,
+        publicKey:      slickPayKey,
         sandbox,
-        amount:     booking.total,
-        name:       `Équinox Sport Club — ${booking.planName}`,
-        backUrl:    `${origin}/success`,
-        webhookUrl: `${origin}/api/slickpay-webhook`,
+        amount:         booking.total,
+        planName:       `Équinox — ${booking.planName}`,
+        customerName:   booking.fullName,
+        customerPhone:  booking.phone,
+        backUrl:        `${origin}/success`,
+        webhookUrl:     `${origin}/api/slickpay-webhook`,
       });
 
       if (!invoice.url && !invoice.link) {
