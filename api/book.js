@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       action:        'book',
       Date:          new Date().toLocaleDateString('fr-FR'),
       Nom:           sheetSafe(booking.fullName),
-      Téléphone:     sheetSafe(booking.phone),
+      Téléphone:     "'" + sheetSafe(booking.phone),
       Sexe:          sheetSafe(booking.gender),
       GroupeSanguin: sheetSafe(booking.bloodGroup  || ''),
       DateNaissance: sheetSafe(booking.birthdate   || ''),
