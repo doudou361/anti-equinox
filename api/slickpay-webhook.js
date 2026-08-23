@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       action:   'updateStatus',
       orderId:  event.order_id   || event.invoice_id || '',
       amount:   event.amount     || '',
-      statut:   '✅ Payé via SlickPay',
+      statut:   'Réservé (Payé)',
     };
 
     await fetch(scriptUrl, {

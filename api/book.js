@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       Durée:         sheetSafe(`${booking.planFrequency} - ${booking.months} mois`),
       Séances:       sheetSafe(booking.planSessions),
       Tarif:         `${booking.total} DA`,
-      Statut:        '⏳ En attente de paiement',
+      Statut:        'Réservé (Non Payé)',
     };
 
     try {
