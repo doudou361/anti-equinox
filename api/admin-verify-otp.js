@@ -23,9 +23,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Code incorrect' });
   }
 
-  // 3. Issue a simple session token
-  // In a full app we'd use JWTs, but for this simple admin panel proxying to Sheets, this is sufficient.
-  const token = Buffer.from(`${email}:${Date.now()}:admin-session`).toString('base64');
+  // 3. Issue a securely signed session token
+  const payload = `${email.toLowerCase()}:${Date.now() + 24 * 60 * 60 * 1000}`; // 24 hours expiry
+  const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const token = Buffer.from(`${payload}|${signature}`).toString('base64');
 
   return res.status(200).json({ success: true, token });
 }
