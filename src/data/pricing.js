@@ -53,13 +53,14 @@ export const pricingCategories = [
       },
     ],
   },
-  {
-    id: 'seance_libre',
-    name: 'Séance Libre',
-    description:
-      'Venez vous entraîner pour une seule séance, sans engagement.',
-    plans: [
-      { id: 'seance_1', frequency: '1 Séance', sessions: 'Accès unitaire', monthlyRate: 500 },
-    ],
-  },
+  // Hiding Séance Libre for now based on user request
+  // {
+  //   id: 'seance_libre',
+  //   name: 'Séance Libre',
+  //   description:
+  //     'Venez vous entraîner pour une seule séance, sans engagement.',
+  //   plans: [
+  //     { id: 'seance_1', frequency: '1 Séance', sessions: 'Accès unitaire', monthlyRate: 500 },
+  //   ],
+  // },
 ];
