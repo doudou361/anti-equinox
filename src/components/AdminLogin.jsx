@@ -8,6 +8,8 @@ export default function AdminLogin({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [authData, setAuthData] = useState(null);
+
   const handleSendCode = async (e) => {
     e.preventDefault();
     if (!email) return;
@@ -23,6 +25,7 @@ export default function AdminLogin({ onLogin }) {
       const data = await res.json();
       
       if (res.ok) {
+        setAuthData({ hash: data.hash, expires: data.expires });
         setStep(2);
         // If in test mode (no resend key), it might log the code to console.
         if (data.testMode) {
@@ -40,7 +43,7 @@ export default function AdminLogin({ onLogin }) {
 
   const handleVerifyCode = async (e) => {
     e.preventDefault();
-    if (!code) return;
+    if (!code || !authData) return;
     setLoading(true);
     setError('');
 
@@ -48,7 +51,7 @@ export default function AdminLogin({ onLogin }) {
       const res = await fetch('/api/admin-verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
+        body: JSON.stringify({ email, code, hash: authData.hash, expires: authData.expires })
       });
       const data = await res.json();
       

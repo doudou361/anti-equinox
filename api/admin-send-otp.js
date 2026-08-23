@@ -1,9 +1,5 @@
 import { Resend } from 'resend';
-
-// Store OTPs in memory for simplicity since it's just one admin.
-// In a serverless environment like Vercel, memory can reset, but for a 5-minute OTP it's usually fine.
-// When migrating to Octenium (which runs a persistent Node.js process), memory is fully persistent.
-export const otps = new Map(); 
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -22,17 +18,19 @@ export default async function handler(req, res) {
 
   // Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Store with expiry (10 minutes)
-  otps.set(email.toLowerCase(), {
-    code: otp,
-    expires: Date.now() + 10 * 60 * 1000
-  });
+  const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  // Create a secure cryptographic signature of the OTP so we don't need to store it in memory
+  // This solves the Vercel serverless memory loss issue securely!
+  const secret = process.env.SLICKPAY_SECRET_KEY || 'equinox-secure-fallback';
+  const hash = crypto.createHmac('sha256', secret)
+                     .update(`${email.toLowerCase()}:${otp}:${expires}`)
+                     .digest('hex');
 
   // If no Resend key (e.g. local testing), just print to console
   if (!RESEND_API_KEY) {
     console.log(`[TEST MODE] OTP for ${email} is: ${otp}`);
-    return res.status(200).json({ success: true, testMode: true });
+    return res.status(200).json({ success: true, testMode: true, hash, expires });
   }
 
   try {
@@ -49,7 +47,8 @@ export default async function handler(req, res) {
       </div>`
     });
 
-    return res.status(200).json({ success: true });
+    // We send back the hash and expiry to the client. The client will send them back with the user's typed code.
+    return res.status(200).json({ success: true, hash, expires });
   } catch (error) {
     console.error('Resend error:', error);
     return res.status(500).json({ error: 'Failed to send email' });
