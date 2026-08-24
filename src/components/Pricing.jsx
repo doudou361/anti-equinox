@@ -166,7 +166,7 @@ const Pricing = ({ onPlanBook, onCrossfitClick }) => {
   const muscCT  = getPricingCategory('musculation_cross_training');
   const muscCF  = getPricingCategory('musculation_avec_crossfit');
   const vip     = getPricingCategory('pack_vip');
-  const libre   = getPricingCategory('seance_libre');
+  // seance_libre hidden — do not call getPricingCategory for it
 
   const openModal = (catName, plan) =>
     onPlanBook({ id: plan.id, name: catName, frequency: plan.frequency, monthlyRate: plan.monthlyRate });
@@ -257,6 +257,7 @@ const Pricing = ({ onPlanBook, onCrossfitClick }) => {
             </motion.div>
 
             {/* ── Séance Libre ── */}
+            {/* Séance Libre card hidden — uncomment pricing.js entry to restore
             <motion.div
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -271,36 +272,8 @@ const Pricing = ({ onPlanBook, onCrossfitClick }) => {
                 transition: 'border-color 0.3s, box-shadow 0.3s',
               }}
             >
-              <div>
-                <div style={{ color: 'var(--gold-primary)', marginBottom: '0.875rem' }}>
-                  <CalendarIcon />
-                </div>
-                <h3 style={{ color: '#F4F4F5', fontSize: '1.8rem', margin: '0 0 0.4rem', fontFamily: 'var(--font-heading)' }}>
-                  {t('pricing.planNames.libre')}
-                </h3>
-                <p style={{ color: '#9A948A', fontSize: '13px', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
-                  {t('pricing.desc.libre')}
-                </p>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#C5A059', fontFamily: 'var(--font-heading)' }}>
-                  {formatDA(libre.plans[0].monthlyRate)}
-                  <span style={{ fontSize: '1rem', fontWeight: 400, color: '#9A948A' }}>{t('pricing.pricePerSession')}</span>
-                </div>
-              </div>
-
-              <button
-                className="btn-glow"
-                onClick={() => setWaBlocked(!openExternalUrl(SL_WA_URL))}
-                style={{
-                  width: '100%', padding: '0.9rem', fontSize: '1rem', borderRadius: '8px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                }}
-              >
-                <WAIcon />
-                {t('pricing.bookSession')}
-              </button>
-
-              {waBlocked && <WhatsAppBlockedNotice url={SL_WA_URL} />}
             </motion.div>
+            */}
 
           </div>
         </div>
