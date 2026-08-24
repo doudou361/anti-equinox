@@ -8,7 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist is committed so Octenium server can serve it without needing to build
 dist-ssr
 coverage
 *.local
