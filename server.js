@@ -1,66 +1,133 @@
-﻿import express from 'express';
+﻿import http from 'http';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js':   'application/javascript',
+  '.css':  'text/css',
+  '.json': 'application/json',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif':  'image/gif',
+  '.svg':  'image/svg+xml',
+  '.webp': 'image/webp',
+  '.mp4':  'video/mp4',
+  '.woff': 'font/woff',
+  '.woff2':'font/woff2',
+  '.ico':  'image/x-icon',
+  '.webm': 'video/webm',
+};
 
-// Security Headers (replaces vercel.json headers)
-app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy',
-    "default-src 'self'; " +
-    "script-src 'self'; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data: blob:; " +
-    "media-src 'self' blob:; " +
-    "connect-src 'self' https://prodapi.slick-pay.com https://devapi.slick-pay.com https://script.google.com; " +
-    "frame-src 'self' https://www.google.com https://maps.google.com https://slick-pay.com; " +
-    "frame-ancestors 'none'; " +
-    "base-uri 'self'; " +
-    "form-action 'self' https://slick-pay.com; " +
-    "object-src 'none'; " +
-    "upgrade-insecure-requests"
-  );
+// -- API handler registry --
+const API_FILES = {
+  '/api/book':              './api/book.js',
+  '/api/slickpay-webhook':  './api/slickpay-webhook.js',
+  '/api/admin-login':       './api/admin-login.js',
+  '/api/admin-codes':       './api/admin-codes.js',
+  '/api/validate-discount': './api/validate-discount.js',
+};
+
+// Parse JSON body from request
+function readBody(req) {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => {
+      try { resolve(data ? JSON.parse(data) : {}); }
+      catch { resolve({}); }
+    });
+  });
+}
+
+// Attach Express-compatible helpers to native res object
+function attachHelpers(res) {
+  res.status = (code) => { res.statusCode = code; return res; };
+  res.json   = (obj)  => {
+    if (!res.headersSent) res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(obj));
+  };
+  res.send   = (body) => res.end(body);
+  return res;
+}
+
+// Set security headers
+function setSecHeaders(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  next();
-});
-
-// API Routes — dynamically import each handler (Vercel-style handler functions)
-const apiRoutes = [
-  { path: '/api/book',              file: './api/book.js' },
-  { path: '/api/slickpay-webhook',  file: './api/slickpay-webhook.js' },
-  { path: '/api/admin-login',       file: './api/admin-login.js' },
-  { path: '/api/admin-codes',       file: './api/admin-codes.js' },
-  { path: '/api/validate-discount', file: './api/validate-discount.js' },
-];
-
-for (const route of apiRoutes) {
-  const mod = await import(route.file);
-  app.all(route.path, (req, res) => mod.default(req, res));
 }
 
-// Static files (built React app)
-app.use(express.static(path.join(__dirname, 'dist')));
+// Boot: import all API handlers, then start server
+(async () => {
+  const handlers = {};
+  for (const [route, file] of Object.entries(API_FILES)) {
+    try {
+      const mod = await import(file);
+      handlers[route] = mod.default;
+      console.log('Loaded handler:', route);
+    } catch (err) {
+      console.error('Failed to load handler', route, err.message);
+    }
+  }
 
-// SPA fallback: all non-API routes go to index.html (React handles routing)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+  const server = http.createServer(async (req, res) => {
+    const url   = new URL(req.url, `http://${req.headers.host}`);
+    const pathname = url.pathname;
 
-app.listen(PORT, () => {
-  console.log(`Equinox Sports Club server running on port ${PORT}`);
-  console.log(`Public URL: ${process.env.PUBLIC_BASE_URL || 'not set'}`);
-});
+    setSecHeaders(res);
+    attachHelpers(res);
+
+    // -- API routing --
+    if (pathname.startsWith('/api/')) {
+      const handler = handlers[pathname];
+      if (!handler) {
+        res.statusCode = 404;
+        return res.json({ error: 'API route not found' });
+      }
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        req.body = await readBody(req);
+      } else {
+        req.body = {};
+      }
+      try {
+        await handler(req, res);
+      } catch (err) {
+        console.error('Handler error:', err);
+        res.statusCode = 500;
+        res.json({ error: 'Internal server error' });
+      }
+      return;
+    }
+
+    // -- Static files from dist/ --
+    let filePath = path.join(__dirname, 'dist', pathname === '/' ? 'index.html' : pathname);
+
+    // SPA fallback: non-existent paths -> index.html
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      filePath = path.join(__dirname, 'dist', 'index.html');
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+
+    const stream = fs.createReadStream(filePath);
+    stream.on('error', () => {
+      res.statusCode = 404;
+      res.end('Not found');
+    });
+    stream.pipe(res);
+  });
+
+  server.listen(PORT, () => {
+    console.log('Equinox Sports Club server running on port', PORT);
+    console.log('Public URL:', process.env.PUBLIC_BASE_URL || 'not set');
+  });
+})();
