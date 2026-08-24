@@ -25,7 +25,6 @@ const MIME = {
   '.webm': 'video/webm',
 };
 
-// -- API handler registry --
 const API_FILES = {
   '/api/book':              './api/book.js',
   '/api/slickpay-webhook':  './api/slickpay-webhook.js',
@@ -34,7 +33,6 @@ const API_FILES = {
   '/api/validate-discount': './api/validate-discount.js',
 };
 
-// Parse JSON body from request
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
@@ -46,7 +44,6 @@ function readBody(req) {
   });
 }
 
-// Attach Express-compatible helpers to native res object
 function attachHelpers(res) {
   res.status = (code) => { res.statusCode = code; return res; };
   res.json   = (obj)  => {
@@ -57,7 +54,6 @@ function attachHelpers(res) {
   return res;
 }
 
-// Set security headers
 function setSecHeaders(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -65,69 +61,63 @@ function setSecHeaders(res) {
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
 }
 
-// Boot: import all API handlers, then start server
 (async () => {
   const handlers = {};
   for (const [route, file] of Object.entries(API_FILES)) {
     try {
       const mod = await import(file);
       handlers[route] = mod.default;
-      console.log('Loaded handler:', route);
-    } catch (err) {
-      console.error('Failed to load handler', route, err.message);
-    }
+    } catch (err) {}
   }
 
   const server = http.createServer(async (req, res) => {
-    const url   = new URL(req.url, `http://${req.headers.host}`);
+    // 1. Force HTTPS Redirect (if coming from load balancer as http)
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    if (protocol === 'http' && !req.headers.host.includes('localhost')) {
+      res.writeHead(301, { "Location": "https://" + req.headers.host + req.url });
+      return res.end();
+    }
+
+    const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
 
     setSecHeaders(res);
     attachHelpers(res);
 
-    // -- API routing --
     if (pathname.startsWith('/api/')) {
       const handler = handlers[pathname];
-      if (!handler) {
-        res.statusCode = 404;
-        return res.json({ error: 'API route not found' });
-      }
+      if (!handler) return res.status(404).json({ error: 'API route not found' });
+      
       if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
         req.body = await readBody(req);
-      } else {
-        req.body = {};
-      }
-      try {
-        await handler(req, res);
-      } catch (err) {
-        console.error('Handler error:', err);
-        res.statusCode = 500;
-        res.json({ error: 'Internal server error' });
-      }
+      } else { req.body = {}; }
+      
+      try { await handler(req, res); } 
+      catch (err) { res.status(500).json({ error: 'Internal server error' }); }
       return;
     }
 
-    // -- Static files from dist/ --
     let filePath = path.join(__dirname, 'dist', pathname === '/' ? 'index.html' : pathname);
-
-    // SPA fallback: non-existent paths -> index.html
     if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
       filePath = path.join(__dirname, 'dist', 'index.html');
     }
 
     const ext = path.extname(filePath).toLowerCase();
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+    
+    // 2. Add ultra-fast caching for static assets (images, videos, js, css)
+    if (ext !== '.html') {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
 
     const stream = fs.createReadStream(filePath);
-    stream.on('error', () => {
-      res.statusCode = 404;
-      res.end('Not found');
-    });
+    stream.on('error', () => res.status(404).end('Not found'));
     stream.pipe(res);
   });
 
   server.listen(PORT, () => {
-    console.log('Equinox Sports Club server running on port', PORT);
-    console.log('Public URL:', process.env.PUBLIC_BASE_URL || 'not set');
+    console.log('Equinox server ready on port', PORT);
   });
 })();
