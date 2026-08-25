@@ -1,7 +1,9 @@
-﻿import http from 'http';
+﻿// ... (previous setup code remains the same)
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import zlib from 'zlib';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,7 +73,6 @@ function setSecHeaders(res) {
   }
 
   const server = http.createServer(async (req, res) => {
-    // 1. Force HTTPS Redirect (if coming from load balancer as http)
     const protocol = req.headers['x-forwarded-proto'] || 'http';
     if (protocol === 'http' && !req.headers.host.includes('localhost')) {
       res.writeHead(301, { "Location": "https://" + req.headers.host + req.url });
@@ -105,16 +106,32 @@ function setSecHeaders(res) {
     const ext = path.extname(filePath).toLowerCase();
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
     
-    // 2. Add ultra-fast caching for static assets (images, videos, js, css)
     if (ext !== '.html') {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       res.setHeader('Cache-Control', 'no-cache');
     }
 
-    const stream = fs.createReadStream(filePath);
+    // Gzip Compression for text files to boost PageSpeed
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const isCompressible = ['.html', '.js', '.css', '.json', '.svg'].includes(ext);
+
+    let stream = fs.createReadStream(filePath);
     stream.on('error', () => res.status(404).end('Not found'));
-    stream.pipe(res);
+
+    if (isCompressible) {
+      if (acceptEncoding.includes('br')) {
+        res.setHeader('Content-Encoding', 'br');
+        stream.pipe(zlib.createBrotliCompress()).pipe(res);
+      } else if (acceptEncoding.includes('gzip')) {
+        res.setHeader('Content-Encoding', 'gzip');
+        stream.pipe(zlib.createGzip()).pipe(res);
+      } else {
+        stream.pipe(res);
+      }
+    } else {
+      stream.pipe(res);
+    }
   });
 
   server.listen(PORT, () => {
