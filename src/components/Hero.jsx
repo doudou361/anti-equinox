@@ -93,7 +93,7 @@ const Hero = () => {
               <video
                 ref={desktopVideoRef}
                 src="/media/equinox-hero.mp4.mp4"
-                poster="/media/hero-poster-desktop.jpg"
+                poster="/hero-bg.jpg"
                 muted
                 playsInline
                 preload="none"
@@ -108,7 +108,7 @@ const Hero = () => {
               <video
                 ref={mobileVideoRef}
                 src="/media/equinox-hero-mobile.mp4"
-                poster="/media/hero-poster-mobile.jpg"
+                poster="/hero-bg.jpg"
                 muted
                 playsInline
                 preload="none"
