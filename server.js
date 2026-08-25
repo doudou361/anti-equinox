@@ -1,5 +1,4 @@
-﻿// ... (previous setup code remains the same)
-import http from 'http';
+﻿import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,10 +34,43 @@ const API_FILES = {
   '/api/validate-discount': './api/validate-discount.js',
 };
 
+// In-Memory Rate Limiter Map: IP -> { count, resetTime }
+const rateLimitMap = new Map();
+
+function rateLimit(req, res) {
+  // Ignore static files, only limit API
+  if (!req.url.startsWith('/api/')) return true;
+
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute window
+  const maxRequests = 20; // Max 20 API requests per minute per IP
+
+  let record = rateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    record = { count: 1, resetTime: now + windowMs };
+    rateLimitMap.set(ip, record);
+    return true;
+  }
+
+  record.count += 1;
+  if (record.count > maxRequests) {
+    res.statusCode = 429;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'Trop de requêtes. Veuillez patienter une minute.' }));
+    return false;
+  }
+  return true;
+}
+
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
-    req.on('data', chunk => { data += chunk; });
+    req.on('data', chunk => { 
+      data += chunk;
+      // Prevent massive payloads (e.g. 1MB max)
+      if (data.length > 1e6) req.connection.destroy();
+    });
     req.on('end', () => {
       try { resolve(data ? JSON.parse(data) : {}); }
       catch { resolve({}); }
@@ -61,6 +93,23 @@ function setSecHeaders(res) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  
+  // Content Security Policy (Prevents XSS Injection Attacks)
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: blob:; " +
+    "media-src 'self' blob:; " +
+    "connect-src 'self' https://prodapi.slick-pay.com https://devapi.slick-pay.com https://script.google.com; " +
+    "frame-src 'self' https://www.google.com https://maps.google.com https://slick-pay.com; " +
+    "frame-ancestors 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self' https://slick-pay.com; " +
+    "object-src 'none'; " +
+    "upgrade-insecure-requests"
+  );
 }
 
 (async () => {
@@ -71,6 +120,9 @@ function setSecHeaders(res) {
       handlers[route] = mod.default;
     } catch (err) {}
   }
+
+  // Clean rate limit map every 5 minutes to avoid memory leaks
+  setInterval(() => rateLimitMap.clear(), 5 * 60 * 1000);
 
   const server = http.createServer(async (req, res) => {
     const protocol = req.headers['x-forwarded-proto'] || 'http';
@@ -84,6 +136,9 @@ function setSecHeaders(res) {
 
     setSecHeaders(res);
     attachHelpers(res);
+
+    // Rate Limiting execution
+    if (!rateLimit(req, res)) return;
 
     if (pathname.startsWith('/api/')) {
       const handler = handlers[pathname];
@@ -99,6 +154,12 @@ function setSecHeaders(res) {
     }
 
     let filePath = path.join(__dirname, 'dist', pathname === '/' ? 'index.html' : pathname);
+    
+    // Directory Traversal Prevention (Though URL parsing mostly handles this naturally)
+    if (!filePath.startsWith(path.join(__dirname, 'dist'))) {
+       return res.status(403).end('Forbidden');
+    }
+
     if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
       filePath = path.join(__dirname, 'dist', 'index.html');
     }
@@ -112,7 +173,6 @@ function setSecHeaders(res) {
       res.setHeader('Cache-Control', 'no-cache');
     }
 
-    // Gzip Compression for text files to boost PageSpeed
     const acceptEncoding = req.headers['accept-encoding'] || '';
     const isCompressible = ['.html', '.js', '.css', '.json', '.svg'].includes(ext);
 
@@ -135,6 +195,6 @@ function setSecHeaders(res) {
   });
 
   server.listen(PORT, () => {
-    console.log('Equinox server ready on port', PORT);
+    console.log('Equinox secure server ready on port', PORT);
   });
 })();
