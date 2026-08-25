@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const IMAGES = Array.from({length: 14}, (_, i) => `/media/slide-${i+1}.jpg.jpg`);
+const IMAGES = Array.from({length: 17}, (_, i) => `/media/slide-${i+1}.jpg.jpg`);
 
 const Gallery = () => {
   return (
@@ -46,7 +46,7 @@ const Gallery = () => {
                   borderRadius: '12px',
                   overflow: 'hidden',
                   position: 'relative',
-                  backgroundColor: '#121212',
+                  backgroundColor: 'transparent',
                 }}
               >
                 <img 
@@ -56,7 +56,7 @@ const Gallery = () => {
                   style={{
                     position: 'absolute', inset: 0,
                     width: '100%', height: '100%',
-                    objectFit: 'cover',
+                    objectFit: 'contain',
                     objectPosition: 'center',
                     transition: 'transform 0.5s ease',
                   }}
