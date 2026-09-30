@@ -38,6 +38,15 @@ const Hero = () => {
     if (mediaPhase !== 'video') return;
 
     let cancelled = false;
+
+    // Safety timeout: if video hasn't started within 15s, skip to images
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('Hero video safety timeout reached — falling back to images');
+        setMediaPhase(0);
+      }
+    }, 15000);
+
     const attempts = [
       ['desktop', desktopVideoRef.current],
       ['mobile', mobileVideoRef.current],
@@ -55,10 +64,13 @@ const Hero = () => {
 
     Promise.all(plays).then((results) => {
       if (cancelled) return;
-      if (results.every((result) => result === false)) setMediaPhase(0);
+      if (results.every((result) => result === false)) {
+        clearTimeout(safetyTimer);
+        setMediaPhase(0);
+      }
     });
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearTimeout(safetyTimer); };
   }, [mediaPhase]);
 
   const handleVideoEnded = () => {

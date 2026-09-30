@@ -1,4 +1,4 @@
-﻿import http from 'http';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -26,6 +26,9 @@ const MIME = {
   '.webm': 'video/webm',
 };
 
+// Extensions that benefit from Range Requests (video/audio streaming)
+const STREAMABLE = new Set(['.mp4', '.webm', '.mp3', '.ogg', '.wav']);
+
 const API_FILES = {
   '/api/book':              './api/book.js',
   '/api/slickpay-webhook':  './api/slickpay-webhook.js',
@@ -38,13 +41,12 @@ const API_FILES = {
 const rateLimitMap = new Map();
 
 function rateLimit(req, res) {
-  // Ignore static files, only limit API
   if (!req.url.startsWith('/api/')) return true;
 
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute window
-  const maxRequests = 20; // Max 20 API requests per minute per IP
+  const windowMs = 60 * 1000;
+  const maxRequests = 20;
 
   let record = rateLimitMap.get(ip);
   if (!record || now > record.resetTime) {
@@ -68,7 +70,6 @@ function readBody(req) {
     let data = '';
     req.on('data', chunk => { 
       data += chunk;
-      // Prevent massive payloads (e.g. 1MB max)
       if (data.length > 1e6) req.connection.destroy();
     });
     req.on('end', () => {
@@ -94,7 +95,6 @@ function setSecHeaders(res) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   
-  // Content Security Policy (Prevents XSS Injection Attacks)
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
     "script-src 'self'; " +
@@ -110,6 +110,50 @@ function setSecHeaders(res) {
     "object-src 'none'; " +
     "upgrade-insecure-requests"
   );
+}
+
+/**
+ * Serve a streamable file (video/audio) with full HTTP Range Request support.
+ * This allows browsers to seek, pause, and resume video playback properly.
+ * Without this, browsers cannot play large video files.
+ */
+function serveStreamable(filePath, req, res) {
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME[ext] || 'application/octet-stream';
+
+  // Always tell the browser we support range requests
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+  const range = req.headers.range;
+
+  if (range) {
+    // Parse "bytes=START-END"
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    // Validate range
+    if (start >= fileSize || end >= fileSize || start > end) {
+      res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` });
+      return res.end();
+    }
+
+    const chunkSize = end - start + 1;
+    res.writeHead(206, {
+      'Content-Range':  `bytes ${start}-${end}/${fileSize}`,
+      'Content-Length': chunkSize,
+    });
+
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+  } else {
+    // No range requested — send the whole file
+    res.writeHead(200, { 'Content-Length': fileSize });
+    fs.createReadStream(filePath).pipe(res);
+  }
 }
 
 (async () => {
@@ -137,9 +181,10 @@ function setSecHeaders(res) {
     setSecHeaders(res);
     attachHelpers(res);
 
-    // Rate Limiting execution
+    // Rate Limiting
     if (!rateLimit(req, res)) return;
 
+    // API routing
     if (pathname.startsWith('/api/')) {
       const handler = handlers[pathname];
       if (!handler) return res.status(404).json({ error: 'API route not found' });
@@ -153,9 +198,10 @@ function setSecHeaders(res) {
       return;
     }
 
+    // Static file serving
     let filePath = path.join(__dirname, 'dist', pathname === '/' ? 'index.html' : pathname);
     
-    // Directory Traversal Prevention (Though URL parsing mostly handles this naturally)
+    // Directory Traversal Prevention
     if (!filePath.startsWith(path.join(__dirname, 'dist'))) {
        return res.status(403).end('Forbidden');
     }
@@ -165,6 +211,13 @@ function setSecHeaders(res) {
     }
 
     const ext = path.extname(filePath).toLowerCase();
+
+    // VIDEO/AUDIO: Use Range Request handler for proper streaming
+    if (STREAMABLE.has(ext)) {
+      return serveStreamable(filePath, req, res);
+    }
+
+    // REGULAR FILES: Standard serving with compression
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
     
     if (ext !== '.html') {
