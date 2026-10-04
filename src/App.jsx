@@ -1,19 +1,25 @@
-import React, { useState } from 'react'
+import React, { useState, Suspense, lazy } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { LanguageProvider } from './context/LanguageContext'
 import { NUTRITION_ENABLED } from './config/features'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Hero from './components/Hero'
-import Schedule from './components/Schedule'
-import Pricing from './components/Pricing'
-import ContactModal from './components/ContactModal'
-import BookingModal from './components/BookingModal'
-import CrossfitScheduleModal from './components/CrossfitScheduleModal'
-import TeamSection from './components/TeamSection'
-import Gallery from './components/Gallery'
-import NutritionPage from './pages/Nutrition'
-import AdminPanel from './components/AdminPanel'
+
+// Lazy load below-the-fold components to reduce initial bundle size
+const Schedule = lazy(() => import('./components/Schedule'));
+const Pricing = lazy(() => import('./components/Pricing'));
+const TeamSection = lazy(() => import('./components/TeamSection'));
+const Gallery = lazy(() => import('./components/Gallery'));
+
+// Lazy load Modals & Pages
+const ContactModal = lazy(() => import('./components/ContactModal'));
+const BookingModal = lazy(() => import('./components/BookingModal'));
+const CrossfitScheduleModal = lazy(() => import('./components/CrossfitScheduleModal'));
+const NutritionPage = lazy(() => import('./pages/Nutrition'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+
+import './App.css'
 import './App.css'
 
 function AppContent() {
@@ -85,11 +91,15 @@ function AppContent() {
   return (
     <>
       {currentView === 'admin' ? (
-        <AdminPanel />
+        <Suspense fallback={<div className="loading-spinner">Chargement...</div>}>
+          <AdminPanel />
+        </Suspense>
       ) : currentView === 'nutrition' && NUTRITION_ENABLED ? (
         <>
           <Navbar {...sharedNavProps} />
-          <NutritionPage onHomeClick={goHome} />
+          <Suspense fallback={<div className="loading-spinner">Chargement...</div>}>
+            <NutritionPage onHomeClick={goHome} />
+          </Suspense>
           <Footer onContactClick={openContactModal} />
         </>
       ) : currentView === 'success' ? (
@@ -119,40 +129,43 @@ function AppContent() {
           <Navbar {...sharedNavProps} />
           <main className="main-content">
             <Hero onBookClick={openBookingModal} />
-            <Schedule />
-            {/* Pricing passes specific plan → modal skips picker, goes straight to form */}
-            <Pricing onPlanBook={openBookingModal} onCrossfitClick={openCrossfitModal} />
-            <TeamSection />
-            <Gallery />
+            <Suspense fallback={<div style={{height: '100vh'}} />}>
+              <Schedule />
+              <Pricing onPlanBook={openBookingModal} onCrossfitClick={openCrossfitModal} />
+              <TeamSection />
+              <Gallery />
+            </Suspense>
           </main>
           <Footer onContactClick={openContactModal} />
         </>
       )}
 
       {/* ── Global modals ────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {bookingModalOpen && (
-          <BookingModal
-            plan={bookingModalPlan}
-            onClose={closeBookingModal}
-          />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <AnimatePresence>
+          {bookingModalOpen && (
+            <BookingModal
+              plan={bookingModalPlan}
+              onClose={closeBookingModal}
+            />
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {isContactModalOpen && (
-          <ContactModal
-            isOpen={isContactModalOpen}
-            onClose={closeContactModal}
-          />
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {isContactModalOpen && (
+            <ContactModal
+              isOpen={isContactModalOpen}
+              onClose={closeContactModal}
+            />
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {crossfitModalOpen && (
-          <CrossfitScheduleModal onClose={closeCrossfitModal} />
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {crossfitModalOpen && (
+            <CrossfitScheduleModal onClose={closeCrossfitModal} />
+          )}
+        </AnimatePresence>
+      </Suspense>
     </>
   )
 }
